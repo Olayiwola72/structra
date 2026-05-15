@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import type { ReactNode } from 'react'
 import { TableProvider } from '../../../../context/TableContext'
 import { DimensionsPanel } from '../../../../components/features/DimensionsPanel/DimensionsPanel'

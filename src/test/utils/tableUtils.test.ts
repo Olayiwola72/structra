@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import type { CellData } from '../../types/table.types'
 import {
   addColumn,
   addRow,

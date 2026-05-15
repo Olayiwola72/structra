@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { siteConfig } from '../../../config/siteConfig'
 
 export function PageLoader(): ReactNode {
   return (
@@ -8,7 +9,7 @@ export function PageLoader(): ReactNode {
         <line x1="11" y1="5" x2="11" y2="27" stroke="#1E293B" strokeWidth="1.5" strokeLinecap="round" />
         <line x1="5" y1="13" x2="27" y2="13" stroke="#1E293B" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
-      <p className="animate-pulse text-sm text-text-muted">Loading...</p>
+      <p className="animate-pulse text-sm text-text-muted">{siteConfig.labels.loading}</p>
     </div>
   )
 }

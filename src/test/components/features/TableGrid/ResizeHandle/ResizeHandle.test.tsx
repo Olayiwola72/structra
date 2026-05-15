@@ -7,13 +7,13 @@ describe('ResizeHandle', () => {
   it('renders with column axis classes', () => {
     render(<ResizeHandle axis="column" label="Resize column" />)
     const handle = screen.getByRole('button', { name: 'Resize column' })
-    expect(handle.className).toContain('resize-handle-col')
+    expect(handle.className).toContain('cursor-col-resize')
   })
 
   it('renders with row axis classes', () => {
     render(<ResizeHandle axis="row" label="Resize row" />)
     const handle = screen.getByRole('button', { name: 'Resize row' })
-    expect(handle.className).toContain('resize-handle-row')
+    expect(handle.className).toContain('cursor-row-resize')
   })
 
   it('fires onMouseDown event', async () => {

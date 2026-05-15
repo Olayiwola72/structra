@@ -8,6 +8,9 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
   build: {
+    chunkSizeWarningLimit: 600,
+    minify: 'esbuild',
+    cssMinify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks(id): string | undefined {
@@ -17,9 +20,9 @@ export default defineConfig({
           if (id.includes('node_modules/lucide-react') || id.includes('node_modules/class-variance-authority') || id.includes('node_modules/clsx')) {
             return 'vendor-ui'
           }
-          if (id.includes('node_modules/jspdf') || id.includes('node_modules/html2canvas') || id.includes('node_modules/xlsx')) {
-            return 'vendor-export'
-          }
+          if (id.includes('node_modules/jspdf')) return 'vendor-pdf'
+          if (id.includes('node_modules/html2canvas')) return 'vendor-canvas'
+          if (id.includes('node_modules/@e965/xlsx')) return 'vendor-excel'
           return undefined
         },
       },

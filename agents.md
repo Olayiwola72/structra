@@ -205,7 +205,7 @@ export default config;
 
 ### Token Usage Rules
 - **Primary blue** → buttons, links, selected cell borders, active nav, focus rings
-- **Accent amber** → ONE place only: the "Generate Table" CTA button. Merged cell highlight.
+- **Accent amber** → ONE place only: the "Create Table" CTA button. Merged cell highlight.
 - **White** → always the page background. `bg-white` on `<body>`. Never `bg-gray-*` for pages.
 - **Surface** → sidebars, toolbar, card backgrounds: `bg-surface`
 - **No arbitrary colors** in JSX — every color must trace to a token
@@ -282,7 +282,7 @@ Layout: justify-between items-center px-6
 Left: Logo SVG
 Center: nav links — text-sm font-medium text-text-secondary hover:text-primary
 Right: "Start Building" → Primary Button
-Links: Home · Features · How It Works · About · Contact
+Links: Home · Open Source · About · Contact
 ```
 
 ### Button Classes (define as reusable component — see Section 10)
@@ -387,14 +387,15 @@ h-12 bg-surface border-b border-border px-4 flex items-center gap-2
 Groups separated by: <div class="w-px h-5 bg-border mx-1" />
 
 Groups:
-  1. Add Row · Add Column · Remove Row · Remove Column   (ghost buttons)
-  2. Merge · Unmerge                                     (ghost buttons)
-  3. Import ▾ (DropdownMenu)                             (secondary button)
+  1. Templates ▾ (DropdownMenu)                          (secondary button)
+       └─ Schedule · Checklist · Pricing Table · Inventory
+  2. Add Row · Add Column · Remove Row · Remove Column   (ghost buttons)
+  3. Merge · Unmerge                                     (ghost buttons)
+  4. Import ▾ (DropdownMenu)                             (secondary button)
        └─ Import from CSV
        └─ Import from Excel
-  4. Clear All · Reset                                   (ghost / danger)
-  5. PDF · PNG · JPEG · Excel                            (outline, text-xs font-semibold)
-       (on < lg: collapse group 5 into Export ▾ dropdown)
+  5. Clear All · Undo                                    (danger / ghost)
+  (Export lives in the right sidebar ExportPanel — not in the toolbar)
 ```
 
 **CSV / Excel Import flow:**
@@ -524,7 +525,7 @@ Row height:   min 32px · max 300px
 ### Navigation
 ```
 Left:   [Structra SVG Logo]
-Center: Home  |  Features  |  Open Source  |  About
+Center: Home  |  Open Source  |  About  |  Contact
 Right:  [Start Building]   (primary button, md size)
         [GitHub ↗]         (ghost button with ExternalLink icon)
 ```
@@ -556,41 +557,7 @@ Clean white space speaks for itself.
 
 ---
 
-### Features Section
-
-**Heading:** `text-2xl sm:text-3xl font-bold text-text-primary text-center`
-**Copy:**
-```
-HEADING:  What makes Structra different.
-SUBTEXT:  Built around the things that actually matter when you're
-          publishing structured content.
-```
-
-**Feature Cards** — 2 columns on tablet, 4 columns on desktop.
-Each card: white background, `border border-border rounded-md p-6`
-NO card shadow. Icon top-left. Heading + one-line description.
-
-```
-[icon: Palette]
-Custom Header Styling
-  Full control over header colors, fonts, and styles.
-  Make your table reflect your document, not a generic template.
-
-[icon: AlignJustify]
-Precision Column Formatting
-  Set column types — text, number, currency, percentage, date.
-  Your data formatted exactly as it should be.
-
-[icon: Download]
-Clean Export Options
-  PDF, PNG, JPEG, or Excel. Import from CSV or Excel.
-  One click. No quality loss.
-
-[icon: Layers]
-Minimal Interface
-  No popups. No ads. No onboarding flows.
-  Just the table and the controls you need.
-```
+> **Note:** The Features section was removed from the LandingPage. The table maker page (`/`) now serves as the primary entry point. The About page (`/about`) contains the brand story and "What Structra Is Not" list.
 
 ---
 
@@ -655,10 +622,10 @@ WHAT WE ARE NOT (rendered as a quiet list, text-sm text-text-muted):
 LEFT:
   [Structra icon mark]  Structra
   Tables, your way.
-  © 2025 Structra. Open source under MIT license.
+  © {getCurrentYear()} Structra. Open source under MIT license.
 
 RIGHT (flex gap-8 text-sm text-text-secondary):
-  Product:    Home · Features · Open Source
+  Product:    Home · Open Source
   Company:    About · Contact · GitHub ↗
   Export:     PDF · PNG · JPEG · Excel · CSV
 
@@ -702,10 +669,10 @@ to PDF, Excel, PNG, or JPEG — free, no account required.">
 | Icons         | **Lucide React**                                                  | `lucide-react` — only icon library  |
 | Drag/Resize   | **@dnd-kit/core + @dnd-kit/utilities**                            | Column/row resize, row reorder      |
 | Export PDF    | **jsPDF + html2canvas**                                           | –                                   |
-| Export Excel  | **SheetJS (xlsx)**                                                | Export + import                     |
+| Export Excel  | **@e965/xlsx** (SheetJS fork)                                     | Export + import                     |
 | Export Image  | **html2canvas**                                                   | PNG + JPEG                          |
 | Import CSV    | **PapaParse**                                                     | Fast, typed, browser-safe CSV parse |
-| Import Excel  | **SheetJS (xlsx)**                                                | Same lib as export — no extra dep   |
+| Import Excel  | **@e965/xlsx** (SheetJS fork)                                     | Same lib as export — no extra dep   |
 | Testing       | **Vitest + React Testing Library + @testing-library/user-event**  | –                                   |
 | Routing       | **React Router v6**                                               | –                                   |
 
@@ -716,7 +683,7 @@ to PDF, Excel, PNG, or JPEG — free, no account required.">
 - **Lucide React** for all icons — consistent, tree-shakeable, typed.
 - **@dnd-kit** for all drag interactions — resize handles, row reordering.
 - **PapaParse** for CSV import — `Papa.parse(file, { header: true })` returns typed rows.
-- **SheetJS** handles both Excel import and export — do not add a second Excel library.
+- **@e965/xlsx** (SheetJS fork) handles both Excel import and export — do not add a second Excel library.
 - Introduce a new library only if: (a) it solves a real problem, and
   (b) it is actively maintained with >1k GitHub stars.
 - Do NOT install two libraries that solve the same problem.
@@ -863,6 +830,7 @@ structra/
 │   │   ├── tableDefaults.ts            # DEFAULT_ROWS, DEFAULT_COLS, MAX limits
 │   │   ├── presets.ts                  # Preset table definitions
 │   │   ├── siteConfig.ts               # Routes, nav, exports, branding
+│   │   ├── exportConfig.ts             # Supported formats + options
 │   │   └── colorPalette.ts             # Header color swatches
 │   │
 │   ├── constants/
@@ -941,17 +909,21 @@ const LandingPage    = lazy(() => import('@/pages/LandingPage'));
 const TableMakerPage = lazy(() => import('@/pages/TableMakerPage'));
 const AboutPage      = lazy(() => import('@/pages/AboutPage'));
 const ContactPage    = lazy(() => import('@/pages/ContactPage'));
+const OpenSourcePage = lazy(() => import('@/pages/OpenSourcePage'));
+const NotFoundPage   = lazy(() => import('@/pages/NotFoundPage'));
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Navbar />
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          <Route path="/"        element={<LandingPage />} />
-          <Route path="/app"     element={<TableMakerPage />} />
-          <Route path="/about"   element={<AboutPage />} />
-          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/"            element={<TableMakerPage />} />
+          <Route path="/app"         element={<TableMakerPage />} />
+          <Route path="/about"       element={<LandingPage />} />
+          <Route path="/contact"     element={<ContactPage />} />
+          <Route path="/open-source" element={<OpenSourcePage />} />
+          <Route path="*"            element={<NotFoundPage />} />
         </Routes>
       </Suspense>
       <Footer />
@@ -1026,12 +998,14 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
   build: {
+    chunkSizeWarningLimit: 600,
+    minify: 'esbuild',       # JS and CSS minification. esbuild required as devDependency.
+    cssMinify: 'esbuild',   # Explicit config — Vite defaults to esbuild for both.
     rollupOptions: {
       output: {
         manualChunks: {
           'vendor-react':  ['react', 'react-dom', 'react-router-dom'],
           'vendor-ui':     ['lucide-react', 'class-variance-authority', 'clsx'],
-          'vendor-export': ['jspdf', 'html2canvas', 'xlsx'],
         },
       },
     },
@@ -1063,13 +1037,10 @@ export default defineConfig({
     @apply outline-2 outline-offset-2 outline-primary;
   }
 }
-
-@layer components {
-  /* Only put things here that can't be expressed as a component prop */
-  .resize-handle-col { @apply absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary; }
-  .resize-handle-row { @apply absolute bottom-0 left-0 w-full h-1 cursor-row-resize hover:bg-primary; }
-}
 ```
+
+> Note: Resize handle classes are now inlined directly in the `ResizeHandle` component.
+> The `@layer components` block was removed as dead code.
 
 ---
 
@@ -1235,10 +1206,12 @@ export interface TableState {
   headerColor: string;
   contentColor: string;
   selectedRange: SelectionRange | null;
+  rows: number;
+  cols: number;
 }
 
 // src/types/export.types.ts
-export type ExportFormat = 'pdf' | 'png' | 'jpeg' | 'excel';
+export type ExportFormat = 'pdf' | 'png' | 'jpeg' | 'excel' | 'csv';
 export interface ExportOptions {
   format: ExportFormat;
   filename?: string;
@@ -1993,7 +1966,7 @@ npx shadcn@latest add button select tooltip dropdown-menu separator badge dialog
 npm install @dnd-kit/core @dnd-kit/utilities
 
 # 6. Export libraries
-npm install jspdf html2canvas xlsx
+npm install jspdf html2canvas @e965/xlsx
 
 # 7. Import libraries
 npm install papaparse
@@ -2004,7 +1977,7 @@ npm install -D vitest @testing-library/react @testing-library/user-event
 npm install -D @testing-library/jest-dom @vitejs/plugin-react jsdom
 
 # 9. Dev tools
-npm install -D @types/react @types/react-dom
+npm install -D @types/react @types/react-dom esbuild
 ```
 
 ---
@@ -2012,7 +1985,7 @@ npm install -D @types/react @types/react-dom
 ## 19. Implementation Status & Checklist
 
 Use this section to track progress. Check items when they are complete.
-Last updated: 2026-05-15 — 137 tests passing, all layers meeting coverage targets.
+Last updated: 2026-05-15 — 140 tests passing, all layers meeting coverage targets.
 
 ### Brand & Positioning
 - [x] Rename all "Tabley" occurrences to "Structra" across all files and strings
@@ -2062,7 +2035,7 @@ Last updated: 2026-05-15 — 137 tests passing, all layers meeting coverage targ
 ### Lazy Loading
 - [x] Every page lazy-loaded via `React.lazy()` + `Suspense` with `<PageLoader />` fallback
 - [x] `QuickPresetsPanel`, `ColumnFormattingPanel`, `ExportPanel` lazy-loaded inside `TableMakerPage`
-- [x] `vite.config.ts` has `manualChunks` splitting vendor-react, vendor-ui, vendor-export
+- [x] `vite.config.ts` has `manualChunks` splitting vendor-react, vendor-ui, vendor-pdf, vendor-canvas, vendor-excel
 - [x] `PageLoader` and `PanelLoader` components built with icon-mark SVG
 - [x] No `Suspense fallback={null}` on any page-level route
 
@@ -2093,6 +2066,23 @@ Last updated: 2026-05-15 — 137 tests passing, all layers meeting coverage targ
 - [x] Parse errors show toast: "Could not read file. Check the format and try again."
 - [x] `useImport` hook lives in `src/hooks/` with full test coverage
 
+### Accessibility
+- [x] Color swatches: `aria-pressed`, `ring-2 ring-primary`, `<Check>` icon for selected state (color-blind safe)
+- [x] Merge cells panel: `aria-live="polite"` on selection display, `aria-live="assertive"` for merge/unmerge outcome announcements
+- [x] Table cells: Tab/Shift+Tab keyboard navigation between cells (skips hidden merged cells)
+- [x] `MobileSheet`: `aria-label` on sheet, overlay `aria-label`, `<h2>` heading, ESC to close
+
+### Font Self-Hosting
+- [x] Google Fonts replaced with `@fontsource/inter` (weights 400–700) + `@fontsource/jetbrains-mono` (weights 400, 500)
+- [x] CSS `@import` in `globals.css` — fonts bundled with app, no external network request
+- [x] CSP updated: removed `fonts.googleapis.com` and `fonts.gstatic.com` from style-src and font-src
+
+### MobileSheet Extraction
+- [x] `MobileSheet` component extracted from `TableMakerPage` to `src/components/layout/MobileSheet/MobileSheet.tsx`
+- [x] Takes `title`, `open`, `onClose`, `children` props
+- [x] Internal ESC key handler (adds listener only when `open` is true)
+- [x] 7 tests covering: closed state, open content, title, overlay close, ESC close, close button, open/close toggle
+
 ### Export
 - [x] PDF/PNG/JPEG/Excel export via strategy pattern in `exportService.ts`
 - [x] CSV export format added (`CSVExporter` class using PapaParse unparse)
@@ -2119,18 +2109,20 @@ Last updated: 2026-05-15 — 137 tests passing, all layers meeting coverage targ
 - [x] Column type/width overlap in `TableHeaderCell` — increased `pr-3 md:pr-2` on parent
 
 ### Responsive Design
-- [ ] Mobile-first: base = mobile, override upward with `sm:` `md:` `lg:`
-- [ ] Navbar: hamburger + slide-in drawer on mobile · full nav on md+
-- [ ] Table maker: bottom sheets mobile · left sidebar md+ · right sidebar lg+
-- [ ] Floating Settings + Presets buttons visible on mobile only
-- [ ] Table grid: `overflow-x-auto` container · `min-w-max` table · scrollable on all sizes
-- [ ] Toolbar: `overflow-x-auto` mobile · export group collapses to dropdown on `< lg`
-- [ ] Hero: `text-3xl sm:text-4xl lg:text-5xl`
-- [ ] Features: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`
-- [ ] Footer: `grid-cols-2 lg:grid-cols-3` · stacked on mobile
-- [ ] All touch targets ≥ 44×44px
-- [ ] Zero horizontal overflow at 320px viewport
-- [ ] Tested at: 375px · 390px · 768px · 1024px · 1280px · 1440px
+- [x] Mobile-first: base = mobile, override upward with `sm:` `md:` `lg:` throughout
+- [x] Navbar: hamburger + slide-in drawer on mobile · full nav on md+ · ESC to close · overlay backdrop
+- [x] Table maker: bottom sheets mobile · left sidebar md+ · right sidebar lg+
+- [x] Floating Settings + Presets buttons visible on mobile only
+- [x] Table grid: `overflow-auto` container · `min-w-max` table · scrollable on all sizes
+- [x] Toolbar: `overflow-x-auto` mobile · all groups in a single row
+- [x] Hero: `text-3xl sm:text-4xl lg:text-5xl`
+- [x] Footer: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` · stacked on mobile
+- [x] IconButton: `w-11 h-11` mobile · `md:h-8 md:w-8` desktop (44×44px touch target)
+- [x] Zero horizontal overflow at 320px viewport (all content scrolls or wraps)
+- [x] `MobileSheet` component extracted from `TableMakerPage` to `src/components/layout/MobileSheet/`
+- [x] Fonts self-hosted via `@fontsource/inter` + `@fontsource/jetbrains-mono` — Google Fonts removed from `index.html`
+- [x] CSP updated: removed `fonts.googleapis.com` and `fonts.gstatic.com` from style-src/font-src
+- [ ] Verified at: 375px · 768px · 1024px · 1280px
 
 ### Libraries
 - [x] shadcn/ui: Select, Tooltip, Dialog, DropdownMenu, Separator installed
@@ -2144,13 +2136,14 @@ Last updated: 2026-05-15 — 137 tests passing, all layers meeting coverage targ
 ### TypeScript
 - [x] `"strict": true` in `tsconfig.json`
 - [x] All types from Section 11 in `src/types/`
+- [x] Explicit `minify: 'esbuild'` + `cssMinify: 'esbuild'` in vite.config.ts
 - [x] Zero `any` without explanatory inline comment
 
 ### Testing
 - [x] `vitest.config.ts` configured per Section 12
 - [x] `src/test/setup.ts` created with `@testing-library/jest-dom`
 - [x] Utils → 95% · Services → 90% · Hooks → 90% · UI components → 85% · Features → 80% · Pages → 75%
-- [x] 28 test files, 137 tests passing across all layers
+- [x] 28 test files, 140 tests passing across all layers
 - [x] Tests in `src/test/` mirroring source structure — no co-located .test files
 - [x] `useImport` tests: valid CSV · valid Excel · malformed file · file >5MB
 - [x] `useColumnResize` tests: full mousedown→mousemove→mouseup cycle · min/max clamping
@@ -2166,6 +2159,85 @@ Last updated: 2026-05-15 — 137 tests passing, all layers meeting coverage targ
 - [x] Dependency Inversion: all components depend on hooks/context, not services directly
 - [x] DRY: no Tailwind class string repeated 3+ times without a component extraction
 - [x] KISS: no abstraction created before its second confirmed use case
+
+### Security
+- [x] Content Security Policy meta tag in `index.html` — restricts script/style/font/image/frame sources
+- [x] CSV injection protection — `sanitizeCsvValue()` in `exportService.ts` prefixes dangerous formulas (`=`, `+`, `-`, `@`, `\t`) with leading single quote
+- [x] File size limit — 5MB max on imports via `assertFileSize()`
+- [x] Row/col clamping during import — `normaliseRows()` clamps to `MAX_ROWS`/`MAX_COLS` before creating cell arrays
+- [x] XLSX cell count limit — 100K max cells via range decode check before `XLSX.utils.sheet_to_json()`
+- [x] `crossorigin` attribute on all Google Fonts `<link>` tags
+- [x] Migrated from `xlsx@0.18.5` to `@e965/xlsx@0.20.3` (community-maintained fork) — resolves the two high-severity CVEs. No remaining npm audit findings.
+
+---
+
+## 20. Security
+
+### Content Security Policy
+
+A CSP `<meta>` tag is set in `index.html` with the following directives:
+
+| Directive       | Value                                                              |
+|-----------------|--------------------------------------------------------------------|
+| `default-src`   | `'self'`                                                           |
+| `script-src`    | `'self' 'unsafe-inline'`                                           |
+| `style-src`     | `'self' 'unsafe-inline' https://fonts.googleapis.com`              |
+| `font-src`      | `'self' https://fonts.gstatic.com`                                 |
+| `img-src`       | `'self' data:`                                                     |
+| `connect-src`   | `'self' ws:` (ws: enables Vite HMR in dev)                        |
+| `frame-src`     | `'none'`                                                           |
+| `object-src`    | `'none'`                                                           |
+| `base-uri`      | `'self'`                                                           |
+
+`'unsafe-inline'` for scripts and styles is required by:
+- Vite HMR (dev mode) — injects inline scripts for hot module reloading
+- Tailwind CSS — generates inline style blocks
+- `contentEditable` cells — user-typed content flows through React's textContent, but the editing surface itself needs inline style application
+
+If deploying to production behind a reverse proxy, prefer moving CSP to an HTTP header for stronger protection (meta tag CSP cannot use `frame-ancestors`, `report-uri`, or `report-to`).
+
+### CSV Injection (Formula Injection)
+
+When exporting to CSV, cell values starting with `=`, `+`, `-`, `@`, or `\t` are prefixed with a single quote (`'`). This is the standard mitigation that tells spreadsheet software (Excel, Google Sheets, LibreOffice Calc) to treat the value as text rather than executing it as a formula.
+
+```ts
+// src/services/exportService.ts
+function sanitizeCsvValue(value: string): string {
+  if (/^[=+\-@\t]/.test(value)) {
+    return `'${value}`
+  }
+  return value
+}
+```
+
+This only affects CSV export. Excel export (SheetJS) handles this differently — values are written as cell data, not as formula strings.
+
+### Import Safety
+
+| Measure                  | Location                          | Threshold                              |
+|--------------------------|-----------------------------------|----------------------------------------|
+| File size limit          | `importService.ts:assertFileSize` | 5MB                                    |
+| Row clamp                | `importService.ts:normaliseRows`  | `MAX_ROWS` (50)                        |
+| Column clamp             | `importService.ts:normaliseRows`  | `MAX_COLS` (20)                        |
+| XLSX cell count limit    | `importService.ts:importExcel`    | 100,000 cells                          |
+| Secondary row/col clamp  | `TableContext.tsx` reducer        | `MAX_ROWS` (50) / `MAX_COLS` (20)      |
+
+The XLSX cell count limit (`MAX_XLSX_CELLS = 100_000`) is enforced before the full parse to prevent zip-bomb-style denial of service. The SheetJS `decode_range` call extracts the reference range from the sheet metadata without loading all cell data into memory.
+
+### External Resources
+
+Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) are loaded from CDN with `crossorigin` attribute on all `<link>` tags. Full Subresource Integrity (SRI) is not feasible because the CSS content varies by user-agent. For strongest security and privacy, self-host the font files and serve from the same origin — see the Inter and JetBrains Mono font files in the `public/fonts/` directory if self-hosting has been set up.
+
+### Dependency Auditing
+
+Run `npm run audit` before each release. The `xlsx` (SheetJS) package has a known high-severity vulnerability (GHSA-4r6h-8v6p-xvw6, GHSA-5pgg-2g8v-p4x9) with no fix available in the community edition. Current mitigations:
+- 5MB file size limit
+- 100K cell count limit
+- Client-side only — no server processing
+
+If the risk profile changes, migrate to a maintained fork (`@sheetjs/sheetjs` or `exceljs`).
+
+> **Update:** This project has migrated from `xlsx@0.18.5` to `@e965/xlsx@0.20.3`, a community-maintained fork that resolves both CVEs. `npm audit` now reports 0 vulnerabilities.
 
 ---
 

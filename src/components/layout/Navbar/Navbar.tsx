@@ -39,9 +39,6 @@ export function Navbar(): ReactNode {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button asChild size="md">
-            <Link to={siteConfig.routes.home}>Start Building</Link>
-          </Button>
           <Button asChild variant="ghost" size="sm">
             <a href={siteConfig.brand.githubUrl} target="_blank" rel="noreferrer">
               GitHub <ExternalLink size={14} aria-hidden="true" />
@@ -85,10 +82,10 @@ export function Navbar(): ReactNode {
                   {item.label}
                 </Link>
               ))}
-              <Button asChild className="mt-4">
-                <Link to={siteConfig.routes.home} onClick={() => setIsOpen(false)}>
-                  Start Building
-                </Link>
+              <Button asChild variant="ghost" size="sm" className="mt-4">
+                <a href={siteConfig.brand.githubUrl} target="_blank" rel="noreferrer" onClick={() => setIsOpen(false)}>
+                  GitHub <ExternalLink size={14} aria-hidden="true" />
+                </a>
               </Button>
             </nav>
           </aside>

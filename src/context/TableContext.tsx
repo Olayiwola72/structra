@@ -54,7 +54,7 @@ type TableAction =
   | { type: 'applyPreset'; preset: PresetDefinition }
   | { type: 'UNDO'; state: TableState }
 
-interface TableContextValue extends TableState {
+interface TableActions {
   generateTable: (rows: number, cols: number) => void
   setCells: (cells: CellData[][]) => void
   updateCell: (cellId: string, value: string) => void
@@ -77,7 +77,26 @@ interface TableContextValue extends TableState {
   canUndo: boolean
 }
 
+interface TableStateFields {
+  rows: number
+  cols: number
+  columnWidths: number[]
+  rowHeights: number[]
+  mergedRanges: MergeRange[]
+  headerStyle: HeaderStyle
+  headerColor: string
+  contentColor: string
+  selectedRange: SelectionRange | null
+}
+
+interface TableCellsValue {
+  cells: CellData[][]
+}
+
+type TableContextValue = TableStateFields & TableActions
+
 const TableContext = createContext<TableContextValue | null>(null)
+const TableCellsContext = createContext<TableCellsValue | null>(null)
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(Math.max(Math.trunc(Number.isFinite(value) ? value : min), min), max)
@@ -285,9 +304,8 @@ export function TableProvider({ children }: { children: ReactNode }): ReactNode 
     [recordSnapshot],
   )
 
-  const value = useMemo<TableContextValue>(
+  const actions = useMemo<TableActions>(
     () => ({
-      ...state,
       generateTable: (rows, cols) => dispatchWithHistory({ type: 'generate', rows, cols }),
       setCells: (cells) => dispatchWithHistory({ type: 'setCells', cells }),
       updateCell: (cellId, value) => dispatchWithHistory({ type: 'updateCell', cellId, value }),
@@ -309,10 +327,48 @@ export function TableProvider({ children }: { children: ReactNode }): ReactNode 
       undo,
       canUndo,
     }),
-    [state, undo, canUndo, dispatchWithHistory],
+    [dispatchWithHistory, undo, canUndo],
   )
 
-  return <TableContext.Provider value={value}>{children}</TableContext.Provider>
+  const cellsValue = useMemo<TableCellsValue>(
+    () => ({ cells: state.cells }),
+    [state.cells],
+  )
+
+  const mainValue = useMemo<TableContextValue>(
+    () => ({
+      rows: state.rows,
+      cols: state.cols,
+      columnWidths: state.columnWidths,
+      rowHeights: state.rowHeights,
+      mergedRanges: state.mergedRanges,
+      headerStyle: state.headerStyle,
+      headerColor: state.headerColor,
+      contentColor: state.contentColor,
+      selectedRange: state.selectedRange,
+      ...actions,
+    }),
+    [
+      state.rows,
+      state.cols,
+      state.columnWidths,
+      state.rowHeights,
+      state.mergedRanges,
+      state.headerStyle,
+      state.headerColor,
+      state.contentColor,
+      state.selectedRange,
+      actions,
+    ],
+  )
+
+  return (
+    <TableCellsContext.Provider value={cellsValue}>
+      <TableContext.Provider value={mainValue}>
+        {children}
+      </TableContext.Provider>
+    </TableCellsContext.Provider>
+  )
 }
 
 export function useTableContext(): TableContextValue {
@@ -323,19 +379,10 @@ export function useTableContext(): TableContextValue {
   return context
 }
 
-export function useStableTableActions(): Pick<
-  TableContextValue,
-  'addRow' | 'addColumn' | 'removeRow' | 'removeColumn' | 'clearAll'
-> {
-  const table = useTableContext()
-  return useMemo(
-    () => ({
-      addRow: table.addRow,
-      addColumn: table.addColumn,
-      removeRow: table.removeRow,
-      removeColumn: table.removeColumn,
-      clearAll: table.clearAll,
-    }),
-    [table.addColumn, table.addRow, table.clearAll, table.removeColumn, table.removeRow],
-  )
+export function useTableData(): TableCellsValue {
+  const context = useContext(TableCellsContext)
+  if (!context) {
+    throw new Error('useTableData must be used inside TableProvider')
+  }
+  return context
 }

@@ -10,7 +10,7 @@ export interface TableHistoryApi {
 
 export function useTableHistory(): TableHistoryApi {
   const pastStates = useRef<TableState[]>([])
-  const [version, setVersion] = useState(0)
+  const [, setVersion] = useState(0)
 
   const recordSnapshot = useCallback((state: TableState): void => {
     pastStates.current.push(state)

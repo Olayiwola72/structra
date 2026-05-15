@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { exportFormats } from '../../../config/exportConfig'
 import { siteConfig } from '../../../config/siteConfig'
 import type { ExportFormat } from '../../../types/export.types'
 import { Button } from '../../ui/Button'
@@ -13,15 +14,17 @@ export function ExportPanel({
 }): ReactNode {
   return (
     <section>
-      <SectionLabel>Export Options</SectionLabel>
+      <SectionLabel>{siteConfig.labels.exportOptions}</SectionLabel>
       <div className="grid grid-cols-2 gap-2">
-        {siteConfig.exports.map((item) => (
+        {exportFormats.map((item) => (
           <Button key={item.format} variant="secondary" size="sm" isLoading={isExporting} onClick={() => onExport(item.format)}>
             {item.label}
           </Button>
         ))}
       </div>
-      <p className="mt-3 text-xs text-text-muted">Export the finished table as PDF, PNG, JPEG, or Excel.</p>
+      <p className="mt-3 text-xs text-text-muted">
+        Export the finished table as {exportFormats.map((e) => e.label).join(', ').replace(/, ([^,]*)$/, ', or $1')}.
+      </p>
     </section>
   )
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { siteConfig } from '../config/siteConfig'
 import { useTableContext } from '../context/TableContext'
 import { importCsv, importExcel } from '../services/importService'
 
@@ -17,7 +18,7 @@ export function useImport(): ImportApi {
       const result = kind === 'csv' ? await importCsv(file) : await importExcel(file)
       setCells(result.cells)
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not read file. Check the format and try again.')
+      setError(caught instanceof Error ? caught.message : siteConfig.messages.importParseError)
     }
   }
 

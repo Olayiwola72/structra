@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react'
 import { siteConfig } from '../../../config/siteConfig'
-import { useTableContext } from '../../../context/TableContext'
+import { useTableContext, useTableData } from '../../../context/TableContext'
 import type { ColumnFormat } from '../../../types/table.types'
 import { SectionLabel } from '../../ui/SectionLabel'
 
 export function ColumnFormattingPanel(): ReactNode {
-  const { cols, cells, setColumnFormat } = useTableContext()
+  const { cells } = useTableData()
+  const { cols, setColumnFormat } = useTableContext()
   return (
     <section>
-      <SectionLabel>Column Type</SectionLabel>
+      <SectionLabel>{siteConfig.labels.columnType}</SectionLabel>
       <div className="space-y-2">
         {Array.from({ length: cols }, (_, index) => (
           <label key={index} className="flex items-center justify-between gap-3 text-sm font-medium text-text-primary">

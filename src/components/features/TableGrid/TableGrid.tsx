@@ -1,17 +1,18 @@
-import { useMemo, useRef, type ReactNode, type RefObject } from 'react'
+import { useCallback, useMemo, useRef, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
 import { AUTOFIT_PADDING, MAX_COLUMN_WIDTH, MAX_ROW_HEIGHT, MIN_COLUMN_WIDTH, MIN_ROW_HEIGHT } from '../../../config/tableDefaults'
-import { isHeaderCell, useTableContext } from '../../../context/TableContext'
+import { isHeaderCell, useTableContext, useTableData } from '../../../context/TableContext'
 import { useColumnResize } from '../../../hooks/useColumnResize'
 import { useRowResize } from '../../../hooks/useRowResize'
 import { useTableSelection } from '../../../hooks/useTableSelection'
 import { getContrastText } from '../../../utils/formatUtils'
-import { isCellInMergeRange, isRangeAnchor } from '../../../utils/mergeUtils'
+import { isRangeAnchor } from '../../../utils/mergeUtils'
 import { TableCell } from './TableCell'
 import { TableHeaderCell } from './TableHeaderCell'
 
 export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> }): ReactNode {
+  const { cells } = useTableData()
   const {
-    cells,
+    rows,
     cols,
     columnWidths,
     rowHeights,
@@ -32,7 +33,7 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
   const { ghostLineRef: columnGhostLineRef, onMouseDown: onColumnResizeStart } = useColumnResize(setColumnWidth)
   const { ghostLineRef: rowGhostLineRef, onMouseDown: onRowResizeStart } = useRowResize(setRowHeight)
 
-  const autoFitColumn = (columnIndex: number): void => {
+  const autoFitColumn = useCallback((columnIndex: number): void => {
     const table = gridRef.current
     if (!table) return
 
@@ -48,9 +49,9 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
       MAX_COLUMN_WIDTH,
     )
     setColumnWidth(columnIndex, nextWidth)
-  }
+  }, [setColumnWidth])
 
-  const autoFitRow = (rowIndex: number): void => {
+  const autoFitRow = useCallback((rowIndex: number): void => {
     const table = gridRef.current
     if (!table) return
 
@@ -79,13 +80,76 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
       MAX_ROW_HEIGHT,
     )
     setRowHeight(rowIndex, nextHeight)
-  }
+  }, [setRowHeight])
 
-  const getMergeForCell = (cellId: string) =>
-    mergedRanges.find((range) => isRangeAnchor(cellId, range))
+  const mergeAnchorMap = useMemo(() => {
+    const map = new Map<string, (typeof mergedRanges)[number]>()
+    for (const range of mergedRanges) {
+      if (isRangeAnchor(`R${range.startRow}C${range.startCol}`, range)) {
+        map.set(`R${range.startRow}C${range.startCol}`, range)
+      }
+    }
+    return map
+  }, [mergedRanges])
 
-  const isHiddenByMerge = (cellId: string): boolean =>
-    mergedRanges.some((range) => isCellInMergeRange(cellId, range) && !isRangeAnchor(cellId, range))
+  const hiddenSet = useMemo(() => {
+    const hidden = new Set<string>()
+    for (const range of mergedRanges) {
+      for (let r = range.startRow; r <= range.endRow; r++) {
+        for (let c = range.startCol; c <= range.endCol; c++) {
+          const id = `R${r}C${c}`
+          if (!isRangeAnchor(id, range)) {
+            hidden.add(id)
+          }
+        }
+      }
+    }
+    return hidden
+  }, [mergedRanges])
+
+  const navigateToCell = useCallback(
+    (nextRow: number, nextCol: number): void => {
+      if (nextRow < 0 || nextRow >= rows || nextCol < 0 || nextCol >= cols) return
+      if (hiddenSet.has(`R${nextRow}C${nextCol}`)) return
+      const el = document.querySelector<HTMLElement>(`[data-cell-id="R${nextRow}C${nextCol}"] [contenteditable]`)
+      el?.focus()
+    },
+    [cols, rows, hiddenSet],
+  )
+
+  const handleCellKeyDown = useCallback(
+    (row: number, col: number, event: KeyboardEvent): void => {
+      if (event.key === 'Tab') {
+        event.preventDefault()
+        const shift = event.shiftKey
+        let nextRow = row
+        let nextCol = shift ? col - 1 : col + 1
+        if (nextCol < 0) { nextRow--; nextCol = cols - 1 }
+        if (nextCol >= cols) { nextRow++; nextCol = 0 }
+        navigateToCell(nextRow, nextCol)
+        return
+      }
+
+      if (event.key.startsWith('Arrow')) {
+        const sel = window.getSelection()
+        const text = (event.currentTarget as HTMLElement).textContent ?? ''
+
+        if (event.key === 'ArrowLeft' && sel && sel.rangeCount > 0 && sel.getRangeAt(0).startOffset > 0) return
+        if (event.key === 'ArrowRight' && sel && sel.rangeCount > 0 && sel.getRangeAt(0).startOffset < text.length) return
+
+        event.preventDefault()
+        const delta: Record<string, [number, number]> = {
+          ArrowUp: [-1, 0],
+          ArrowDown: [1, 0],
+          ArrowLeft: [0, -1],
+          ArrowRight: [0, 1],
+        }
+        const [dr, dc] = delta[event.key] ?? [0, 0]
+        navigateToCell(row + dr, col + dc)
+      }
+    },
+    [cols, rows, navigateToCell],
+  )
 
   return (
     <div className="h-full overflow-auto p-2 sm:p-4">
@@ -117,7 +181,8 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
             {cells.map((row, rowIndex) => (
               <tr key={rowIndex} style={{ height: rowHeights[rowIndex] }}>
                 {row.map((cell, colIndex) => {
-                  if (isHiddenByMerge(cell.id)) return null
+                  if (hiddenSet.has(cell.id)) return null
+                  const merge = mergeAnchorMap.get(cell.id)
                   return (
                     <TableCell
                       key={cell.id}
@@ -129,19 +194,18 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
                       headerTextColor={headerTextColor}
                       contentColor={contentColor}
                       rowHeight={rowHeights[rowIndex]}
-                      merge={getMergeForCell(cell.id)}
+                      merge={merge}
                       selectedRange={selectedRange}
                       onSelect={selectCell}
                       onChange={updateCell}
                       onBlur={(cellId, value, col) => {
-                        const format = cells[rowIndex]?.[col]?.format ?? 'text'
                         if (!isHeaderCell(headerStyle, rowIndex, col)) {
                           updateCell(cellId, value)
-                          setColumnFormat(col, format)
                         }
                       }}
                       onRowResizeStart={onRowResizeStart}
                       onAutoFitRow={autoFitRow}
+                      onKeyDown={handleCellKeyDown}
                     />
                   )
                 })}

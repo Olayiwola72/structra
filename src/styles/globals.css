@@ -1,3 +1,10 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -31,15 +38,5 @@
 
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-primary;
-  }
-}
-
-@layer components {
-  .resize-handle-col {
-    @apply absolute right-0 top-0 h-full w-3 cursor-col-resize hover:bg-primary/20 md:w-2;
-  }
-
-  .resize-handle-row {
-    @apply absolute bottom-0 left-0 h-3 w-full cursor-row-resize hover:bg-primary/20 md:h-2;
   }
 }

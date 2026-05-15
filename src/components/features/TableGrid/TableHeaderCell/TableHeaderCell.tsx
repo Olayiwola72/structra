@@ -1,24 +1,26 @@
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { siteConfig } from '../../../../config/siteConfig'
 import type { ColumnFormat } from '../../../../types/table.types'
 import { ResizeHandle } from '../ResizeHandle'
 
-export function TableHeaderCell({
-  index,
-  width,
-  format,
-  onFormatChange,
-  onResizeStart,
-  onAutoFit,
-}: {
+export interface TableHeaderCellProps {
   index: number
   width: number
   format: ColumnFormat
   onFormatChange: (format: ColumnFormat) => void
   onResizeStart: (event: React.MouseEvent, index: number, width: number) => void
   onAutoFit: (index: number) => void
-}): ReactNode {
+}
+
+function TableHeaderCellRaw({
+  index,
+  width,
+  format,
+  onFormatChange,
+  onResizeStart,
+  onAutoFit,
+}: TableHeaderCellProps): ReactNode {
   return (
     <div className="relative flex min-w-20 items-center justify-between border-r border-border bg-surface pl-2 pr-3 py-1 md:pr-2">
       <label className="flex items-center gap-1 text-xs font-medium text-text-secondary">
@@ -40,10 +42,17 @@ export function TableHeaderCell({
       <ChevronDown size={13} aria-hidden="true" className="text-text-muted" />
       <ResizeHandle
         axis="column"
-        label="Double-click to AutoFit column width"
+        label={siteConfig.labels.autoFitColumn}
         onMouseDown={(event) => onResizeStart(event, index, width)}
         onDoubleClick={() => onAutoFit(index)}
       />
     </div>
   )
 }
+
+export const TableHeaderCell = memo(TableHeaderCellRaw, (prev, next) => {
+  if (prev.index !== next.index) return false
+  if (prev.width !== next.width) return false
+  if (prev.format !== next.format) return false
+  return true
+})

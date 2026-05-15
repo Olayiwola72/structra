@@ -8,7 +8,6 @@ import { siteConfig } from './config/siteConfig'
 
 const LandingPage = lazy(() => import('./pages/LandingPage/LandingPage'))
 const TableMakerPage = lazy(() => import('./pages/TableMakerPage/TableMakerPage'))
-const AboutPage = lazy(() => import('./pages/AboutPage/AboutPage'))
 const ContactPage = lazy(() => import('./pages/ContactPage/ContactPage'))
 const OpenSourcePage = lazy(() => import('./pages/OpenSourcePage/OpenSourcePage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage/NotFoundPage'))

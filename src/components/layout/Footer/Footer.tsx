@@ -2,6 +2,7 @@ import { ExternalLink } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import logoUrl from '../../../assets/logo.svg'
+import { exportFormats } from '../../../config/exportConfig'
 import { siteConfig } from '../../../config/siteConfig'
 import { getCurrentYear } from '../../../utils/dateUtils'
 
@@ -41,12 +42,11 @@ export function Footer(): ReactNode {
           </nav>
         </div>
         <div>
-          <h2 className="mb-3 text-sm font-semibold text-text-primary">Export</h2>
+          <h2 className="mb-3 text-sm font-semibold text-text-primary">{siteConfig.labels.exportOptions}</h2>
           <div className="flex flex-col gap-2 text-sm text-text-secondary">
-            {siteConfig.exports.map((item) => (
+            {exportFormats.map((item) => (
               <span key={item.format}>{item.label}</span>
             ))}
-            <span>CSV</span>
           </div>
         </div>
       </div>

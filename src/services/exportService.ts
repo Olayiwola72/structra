@@ -1,4 +1,3 @@
-import type { CellData, HeaderStyle, MergeRange } from '../types/table.types'
 import type { ExportFormat, ExportOptions, ExportStrategy } from '../types/export.types'
 import { siteConfig } from '../config/siteConfig'
 import { isHeaderCell } from '../context/TableContext'
@@ -8,6 +7,13 @@ function downloadUrl(url: string, filename: string): void {
   link.href = url
   link.download = filename
   link.click()
+}
+
+function sanitizeCsvValue(value: string): string {
+  if (/^[=+\-@\t]/.test(value)) {
+    return `'${value}`
+  }
+  return value
 }
 
 class PDFExporter implements ExportStrategy {
@@ -50,12 +56,10 @@ class ImageExporter implements ExportStrategy {
 
 class CSVExporter implements ExportStrategy {
   async export(_element: HTMLElement, options: ExportOptions): Promise<void> {
-    const payload = options as ExportOptions & {
-      cells?: CellData[][]
-      headerStyle?: HeaderStyle
-    }
     const { unparse } = await import('papaparse')
-    const values = (payload.cells ?? []).map((row) => row.map((cell) => cell.value))
+    const values = (options.cells ?? []).map((row) =>
+      row.map((cell) => sanitizeCsvValue(cell.value)),
+    )
     const csv = unparse(values)
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     downloadUrl(URL.createObjectURL(blob), `${options.filename ?? siteConfig.exportFileBaseName}.csv`)
@@ -64,26 +68,21 @@ class CSVExporter implements ExportStrategy {
 
 class ExcelExporter implements ExportStrategy {
   async export(_element: HTMLElement, options: ExportOptions): Promise<void> {
-    const payload = options as ExportOptions & {
-      cells?: CellData[][]
-      headerStyle?: HeaderStyle
-      mergedRanges?: MergeRange[]
-    }
-    const { utils, writeFile } = await import('xlsx')
-    const values = (payload.cells ?? []).map((row) => row.map((cell) => cell.value))
+    const { utils, writeFile } = await import('@e965/xlsx')
+    const values = (options.cells ?? []).map((row) => row.map((cell) => cell.value))
     const worksheet = utils.aoa_to_sheet(values)
 
-    if (payload.mergedRanges?.length) {
-      worksheet['!merges'] = payload.mergedRanges.map((range) => ({
+    if (options.mergedRanges?.length) {
+      worksheet['!merges'] = options.mergedRanges.map((range) => ({
         s: { r: range.startRow, c: range.startCol },
         e: { r: range.endRow, c: range.endCol },
       }))
     }
 
-    if (payload.cells && payload.headerStyle) {
-      payload.cells.forEach((row, rowIndex) => {
+    if (options.cells && options.headerStyle) {
+      options.cells.forEach((row, rowIndex) => {
         row.forEach((_cell, colIndex) => {
-          if (!isHeaderCell(payload.headerStyle!, rowIndex, colIndex)) return
+          if (!isHeaderCell(options.headerStyle!, rowIndex, colIndex)) return
           const address = utils.encode_cell({ r: rowIndex, c: colIndex })
           worksheet[address] = worksheet[address] ?? { v: '' }
         })

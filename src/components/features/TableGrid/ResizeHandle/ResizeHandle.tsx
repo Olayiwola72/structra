@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { cn } from '../../../../lib/utils'
 
 export function ResizeHandle({
   axis,
@@ -12,13 +11,17 @@ export function ResizeHandle({
   onMouseDown?: (event: React.MouseEvent<HTMLSpanElement>) => void
   onDoubleClick?: () => void
 }): ReactNode {
+  const axisClass = axis === 'column'
+    ? 'right-0 top-0 h-full w-1 cursor-col-resize'
+    : 'bottom-0 left-0 w-full h-1 cursor-row-resize'
+
   return (
     <span
       role="button"
       tabIndex={0}
       aria-label={label}
       title={label}
-      className={cn(axis === 'column' ? 'resize-handle-col' : 'resize-handle-row', 'opacity-0 transition-opacity duration-100 hover:opacity-100')}
+      className={`absolute ${axisClass} opacity-0 transition-opacity duration-100 hover:opacity-100 hover:bg-primary`}
       onMouseDown={onMouseDown}
       onDoubleClick={onDoubleClick}
     />

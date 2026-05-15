@@ -1,10 +1,12 @@
 import { lazy, Suspense, useRef, useState, type ReactNode } from 'react'
-import { Settings, Sparkles, X } from 'lucide-react'
+import { Settings, Sparkles } from 'lucide-react'
+import { exportFormats } from '../../config/exportConfig'
+import { siteConfig } from '../../config/siteConfig'
 import { TableProvider, useTableContext } from '../../context/TableContext'
 import { useExport } from '../../hooks/useExport'
-import { Button } from '../../components/ui/Button'
 import { IconButton } from '../../components/ui/IconButton'
 import { PanelLoader } from '../../components/ui/PanelLoader'
+import { MobileSheet } from '../../components/layout/MobileSheet'
 import { TableGrid } from '../../components/features/TableGrid'
 import { TableToolbar } from '../../components/features/TableToolbar'
 import { DimensionsPanel } from '../../components/features/DimensionsPanel'
@@ -37,7 +39,33 @@ function TableMakerContent(): ReactNode {
 
   return (
     <main className="flex h-[calc(100vh-56px)] flex-col overflow-hidden bg-white md:h-[calc(100vh-60px)]">
-      <TableToolbar onExport={handleExport} isExporting={isExporting} />
+      <section className="border-b border-border bg-white px-6 py-5 text-center sm:py-7">
+        <h1 className="text-xl font-bold text-text-primary sm:text-2xl">
+          Tables built for analytical writing.
+        </h1>
+        <p className="mx-auto mt-1 max-w-lg text-sm text-text-secondary">
+          Full control over headers, formatting, and export.
+        </p>
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-text-muted sm:text-sm">
+          <span className="flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary/60" aria-hidden="true" />
+            Custom headers
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary/60" aria-hidden="true" />
+            Column types
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary/60" aria-hidden="true" />
+            Merge cells
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary/60" aria-hidden="true" />
+            {exportFormats.map((f) => f.label).join(', ')}
+          </span>
+        </div>
+      </section>
+      <TableToolbar />
       <div className="flex flex-1 overflow-hidden">
         <aside className="hidden w-sidebar-left flex-none flex-col gap-8 overflow-y-auto border-r border-border bg-surface p-6 md:flex">
           <DimensionsPanel />
@@ -48,7 +76,7 @@ function TableMakerContent(): ReactNode {
         <section className="flex min-w-0 flex-1 flex-col" aria-label="Editable table workspace">
           <div className="flex items-center justify-between border-b border-border bg-white px-4 py-2 text-xs text-text-muted">
             <span>{rows} rows x {cols} columns</span>
-            <span>Double-click a column border to AutoFit width</span>
+            <span>{siteConfig.labels.autoFitColumn}</span>
           </div>
           <TableGrid tableRef={tableRef} />
         </section>
@@ -107,36 +135,6 @@ function TableMakerContent(): ReactNode {
         )}
       </MobileSheet>
     </main>
-  )
-}
-
-function MobileSheet({
-  title,
-  open,
-  onClose,
-  children,
-}: {
-  title: string
-  open: boolean
-  onClose: () => void
-  children: ReactNode
-}): ReactNode {
-  if (!open) return null
-
-  return (
-    <>
-      <button type="button" aria-label="Close panel overlay" className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={onClose} />
-      <aside className="fixed inset-x-0 bottom-0 z-40 max-h-[80vh] overflow-y-auto rounded-t-md bg-white p-6 shadow-sm md:hidden">
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X size={16} aria-hidden="true" /> Close
-          </Button>
-        </div>
-        {children}
-      </aside>
-    </>
   )
 }
 

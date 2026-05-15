@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
+import { siteConfig } from '../../../../config/siteConfig'
 import { isHeaderCell } from '../../../../context/TableContext'
 import { cn } from '../../../../lib/utils'
 import type { CellData, HeaderStyle, MergeRange, SelectionRange } from '../../../../types/table.types'
@@ -22,9 +23,10 @@ export interface TableCellProps {
   onBlur: (cellId: string, value: string, col: number) => void
   onRowResizeStart: (event: React.MouseEvent, row: number, currentHeight: number) => void
   onAutoFitRow: (row: number) => void
+  onKeyDown: (row: number, col: number, event: React.KeyboardEvent) => void
 }
 
-export function TableCell({
+function TableCellRaw({
   cell,
   row,
   col,
@@ -40,6 +42,7 @@ export function TableCell({
   onBlur,
   onRowResizeStart,
   onAutoFitRow,
+  onKeyDown,
 }: TableCellProps): ReactNode {
   const CellTag = isHeaderCell(headerStyle, row, col) ? 'th' : 'td'
   const selected = selectedRange ? isCellInMergeRange(cell.id, { ...normalizeSelection(selectedRange) }) : false
@@ -61,6 +64,7 @@ export function TableCell({
         backgroundColor: CellTag === 'th' ? headerColor : undefined,
         color: CellTag === 'th' ? headerTextColor : contentColor,
       }}
+      data-cell-id={cell.id}
       onClick={(event) => onSelect(row, col, event)}
     >
       <div
@@ -70,6 +74,7 @@ export function TableCell({
         className="min-h-11 whitespace-pre-wrap break-words p-1.5 outline-none sm:p-2"
         onInput={(event) => onChange(cell.id, event.currentTarget.textContent ?? '')}
         onBlur={(event) => onBlur(cell.id, event.currentTarget.textContent ?? '', col)}
+        onKeyDown={(event) => onKeyDown(row, col, event)}
       >
         {displayValue}
       </div>
@@ -78,10 +83,31 @@ export function TableCell({
       </span>
       <ResizeHandle
         axis="row"
-        label="Double-click to AutoFit row height"
+        label={siteConfig.labels.autoFitRow}
         onMouseDown={(event) => onRowResizeStart(event, row, rowHeight)}
         onDoubleClick={() => onAutoFitRow(row)}
       />
     </CellTag>
   )
 }
+
+export const TableCell = memo(TableCellRaw, (prev, next) => {
+  if (prev.cell.id !== next.cell.id) return false
+  if (prev.cell.value !== next.cell.value) return false
+  if (prev.cell.colSpan !== next.cell.colSpan) return false
+  if (prev.cell.rowSpan !== next.cell.rowSpan) return false
+  if (prev.cell.isMerged !== next.cell.isMerged) return false
+  if (prev.cell.format !== next.cell.format) return false
+  if (prev.row !== next.row) return false
+  if (prev.col !== next.col) return false
+  if (prev.headerStyle !== next.headerStyle) return false
+  if (prev.headerColor !== next.headerColor) return false
+  if (prev.headerTextColor !== next.headerTextColor) return false
+  if (prev.contentColor !== next.contentColor) return false
+  if (prev.rowHeight !== next.rowHeight) return false
+  if (prev.selectedRange !== next.selectedRange) return false
+  if (prev.merge !== next.merge) {
+    if (prev.merge?.key !== next.merge?.key) return false
+  }
+  return true
+})

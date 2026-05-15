@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { siteConfig } from '../config/siteConfig'
-import { useTableContext } from '../context/TableContext'
+import { useTableContext, useTableData } from '../context/TableContext'
 import { exportTable } from '../services/exportService'
 import type { ExportFormat } from '../types/export.types'
 
@@ -11,7 +11,16 @@ export interface ExportApi {
 
 export function useExport(): ExportApi {
   const [isExporting, setIsExporting] = useState(false)
-  const { cells, headerStyle, mergedRanges } = useTableContext()
+  const { cells } = useTableData()
+  const { headerStyle, mergedRanges } = useTableContext()
+
+  const cellsRef = useRef(cells)
+  const styleRef = useRef(headerStyle)
+  const mergedRef = useRef(mergedRanges)
+
+  useEffect(() => { cellsRef.current = cells }, [cells])
+  useEffect(() => { styleRef.current = headerStyle }, [headerStyle])
+  useEffect(() => { mergedRef.current = mergedRanges }, [mergedRanges])
 
   const exportAs = async (format: ExportFormat, element: HTMLElement | null): Promise<void> => {
     if (!element) return
@@ -23,10 +32,10 @@ export function useExport(): ExportApi {
       await exportTable(element, {
         format,
         filename: siteConfig.exportFileBaseName,
-        cells,
-        headerStyle,
-        mergedRanges,
-      } as Parameters<typeof exportTable>[1])
+        cells: cellsRef.current,
+        headerStyle: styleRef.current,
+        mergedRanges: mergedRef.current,
+      })
     } finally {
       element.classList.remove('is-exporting')
       setIsExporting(false)
