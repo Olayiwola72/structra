@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { LandingPage } from './LandingPage'
+import { LandingPage } from '../../../pages/LandingPage/LandingPage'
 
 describe('LandingPage', () => {
   it('renders the analytical-writing hero copy', () => {

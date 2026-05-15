@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Generated coverage reports
+coverage
+
+# Generated export files from tests
+structra-table.*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

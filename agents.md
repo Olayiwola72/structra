@@ -743,18 +743,15 @@ structra/
 │   │   │   │                           # (extend shadcn/ui components here)
 │   │   │   ├── Button/
 │   │   │   │   ├── Button.tsx
-│   │   │   │   ├── Button.test.tsx
 │   │   │   │   └── index.ts
 │   │   │   ├── IconButton/
 │   │   │   │   ├── IconButton.tsx
-│   │   │   │   ├── IconButton.test.tsx
 │   │   │   │   └── index.ts
 │   │   │   ├── SectionLabel/
 │   │   │   │   ├── SectionLabel.tsx
 │   │   │   │   └── index.ts
 │   │   │   ├── ColorSwatch/
 │   │   │   │   ├── ColorSwatch.tsx
-│   │   │   │   ├── ColorSwatch.test.tsx
 │   │   │   │   └── index.ts
 │   │   │   └── Badge/
 │   │   │       ├── Badge.tsx
@@ -763,11 +760,9 @@ structra/
 │   │   ├── layout/                     # Structural shell components
 │   │   │   ├── Navbar/
 │   │   │   │   ├── Navbar.tsx
-│   │   │   │   ├── Navbar.test.tsx
 │   │   │   │   └── index.ts
 │   │   │   ├── Footer/
 │   │   │   │   ├── Footer.tsx
-│   │   │   │   ├── Footer.test.tsx
 │   │   │   │   └── index.ts
 │   │   │   ├── Sidebar/
 │   │   │   │   ├── Sidebar.tsx
@@ -779,26 +774,21 @@ structra/
 │   │   └── features/                   # Domain-specific feature components
 │   │       ├── TableGrid/
 │   │       │   ├── TableGrid.tsx
-│   │       │   ├── TableGrid.test.tsx
 │   │       │   ├── TableCell/
 │   │       │   │   ├── TableCell.tsx
-│   │       │   │   ├── TableCell.test.tsx
 │   │       │   │   └── index.ts
 │   │       │   ├── TableHeaderCell/
 │   │       │   │   ├── TableHeaderCell.tsx
 │   │       │   │   └── index.ts
 │   │       │   ├── ResizeHandle/
 │   │       │   │   ├── ResizeHandle.tsx
-│   │       │   │   ├── ResizeHandle.test.tsx
 │   │       │   │   └── index.ts
 │   │       │   └── index.ts
 │   │       ├── TableToolbar/
 │   │       │   ├── TableToolbar.tsx
-│   │       │   ├── TableToolbar.test.tsx
 │   │       │   └── index.ts
 │   │       ├── DimensionsPanel/
 │   │       │   ├── DimensionsPanel.tsx
-│   │       │   ├── DimensionsPanel.test.tsx
 │   │       │   └── index.ts
 │   │       ├── HeaderOptionsPanel/
 │   │       │   ├── HeaderOptionsPanel.tsx
@@ -808,24 +798,20 @@ structra/
 │   │       │   └── index.ts
 │   │       ├── MergeCellsPanel/
 │   │       │   ├── MergeCellsPanel.tsx
-│   │       │   ├── MergeCellsPanel.test.tsx
 │   │       │   └── index.ts
 │   │       ├── ColumnFormattingPanel/
 │   │       │   ├── ColumnFormattingPanel.tsx
 │   │       │   └── index.ts
 │   │       ├── QuickPresetsPanel/
 │   │       │   ├── QuickPresetsPanel.tsx
-│   │       │   ├── QuickPresetsPanel.test.tsx
 │   │       │   └── index.ts
 │   │       └── ExportPanel/
 │   │           ├── ExportPanel.tsx
-│   │           ├── ExportPanel.test.tsx
 │   │           └── index.ts
 │   │
 │   ├── pages/
 │   │   ├── TableMakerPage/
 │   │   │   ├── TableMakerPage.tsx
-│   │   │   ├── TableMakerPage.test.tsx
 │   │   │   └── index.ts
 │   │   ├── LandingPage/
 │   │   │   ├── LandingPage.tsx
@@ -833,53 +819,50 @@ structra/
 │   │   ├── AboutPage/
 │   │   │   ├── AboutPage.tsx
 │   │   │   └── index.ts
-│   │   └── ContactPage/
-│   │       ├── ContactPage.tsx
+│   │   ├── ContactPage/
+│   │   │   ├── ContactPage.tsx
+│   │   │   └── index.ts
+│   │   └── OpenSourcePage/
+│   │       ├── OpenSourcePage.tsx
+│   │       └── index.ts
+│   │   └── NotFoundPage/
+│   │       ├── NotFoundPage.tsx
 │   │       └── index.ts
 │   │
 │   ├── context/
-│   │   ├── TableContext.tsx             # Global table state + dispatch
-│   │   └── TableContext.test.tsx
+│   │   └── TableContext.tsx             # Global table state + dispatch
 │   │
 │   ├── hooks/
 │   │   ├── useTable.ts                 # Core CRUD: add/remove row/col, update cell
-│   │   ├── useTable.test.ts
 │   │   ├── useTableSelection.ts        # Cell/range selection
-│   │   ├── useTableSelection.test.ts
 │   │   ├── useMergeCells.ts            # Merge / unmerge
-│   │   ├── useMergeCells.test.ts
 │   │   ├── useColumnResize.ts          # Drag-to-resize columns
-│   │   ├── useColumnResize.test.ts
 │   │   ├── useRowResize.ts             # Drag-to-resize rows
-│   │   ├── useRowResize.test.ts
 │   │   ├── useExport.ts                # Export orchestration
-│   │   ├── useExport.test.ts
 │   │   ├── useTableHistory.ts          # Undo / redo
-│   │   └── useTableHistory.test.ts
+│   │   └── useImport.ts                # CSV / Excel import
 │   │
 │   ├── services/
-│   │   ├── exportService.ts            # Strategy pattern: PDF/PNG/JPEG/Excel
-│   │   └── exportService.test.ts
+│   │   ├── exportService.ts            # Strategy pattern: PDF/PNG/JPEG/Excel/CSV
+│   │   └── importService.ts            # CSV / Excel import logic
 │   │
 │   ├── utils/
 │   │   ├── tableUtils.ts               # Pure table transformation functions
-│   │   ├── tableUtils.test.ts
 │   │   ├── mergeUtils.ts               # Merge range math
-│   │   ├── mergeUtils.test.ts
 │   │   ├── cellUtils.ts                # Cell ID parsing, coordinate helpers
-│   │   ├── cellUtils.test.ts
 │   │   ├── formatUtils.ts              # Column format helpers
-│   │   └── formatUtils.test.ts
+│   │   └── dateUtils.ts                # Dynamic year helper
 │   │
 │   ├── types/
 │   │   ├── table.types.ts
 │   │   ├── export.types.ts
-│   │   └── ui.types.ts
+│   │   ├── ui.types.ts
+│   │   └── import.types.ts
 │   │
 │   ├── config/
 │   │   ├── tableDefaults.ts            # DEFAULT_ROWS, DEFAULT_COLS, MAX limits
 │   │   ├── presets.ts                  # Preset table definitions
-│   │   ├── exportConfig.ts             # Supported formats + options
+│   │   ├── siteConfig.ts               # Routes, nav, exports, branding
 │   │   └── colorPalette.ts             # Header color swatches
 │   │
 │   ├── constants/
@@ -888,11 +871,47 @@ structra/
 │   ├── styles/
 │   │   └── globals.css                 # Tailwind directives + any global CSS
 │   │
-│   ├── test/
-│   │   └── setup.ts                    # jest-dom import
+│   ├── test/                           # All tests live here (never co-located with source)
+│   │   ├── setup.ts                    # jest-dom import
+│   │   ├── App.test.tsx
+│   │   ├── config.test.ts
+│   │   ├── utils/
+│   │   │   ├── cellUtils.test.ts
+│   │   │   ├── tableUtils.test.ts
+│   │   │   ├── mergeUtils.test.ts
+│   │   │   ├── formatUtils.test.ts
+│   │   │   └── dateUtils.test.ts
+│   │   ├── hooks/
+│   │   │   ├── useTableHistory.test.ts
+│   │   │   ├── useTableSelection.test.tsx
+│   │   │   ├── useImport.test.tsx
+│   │   │   ├── useColumnResize.test.ts
+│   │   │   ├── useRowResize.test.ts
+│   │   │   └── useExport.test.tsx
+│   │   ├── services/
+│   │   │   ├── importService.test.ts
+│   │   │   └── exportService.test.ts
+│   │   ├── context/
+│   │   │   └── TableContext.test.tsx
+│   │   ├── components/
+│   │   │   ├── ui/
+│   │   │   │   ├── Button/Button.test.tsx
+│   │   │   │   ├── IconButton/IconButton.test.tsx
+│   │   │   │   └── ColorSwatch/ColorSwatch.test.tsx
+│   │   │   └── features/
+│   │   │       ├── TableGrid/
+│   │   │       │   ├── TableCell/TableCell.test.tsx
+│   │   │       │   └── ResizeHandle/ResizeHandle.test.tsx
+│   │   │       ├── TableToolbar/TableToolbar.test.tsx
+│   │   │       ├── DimensionsPanel/DimensionsPanel.test.tsx
+│   │   │       ├── QuickPresetsPanel/QuickPresetsPanel.test.tsx
+│   │   │       ├── MergeCellsPanel/MergeCellsPanel.test.tsx
+│   │   │       └── ExportPanel/ExportPanel.test.tsx
+│   │   └── pages/
+│   │       ├── TableMakerPage/TableMakerPage.test.tsx
+│   │       └── LandingPage/LandingPage.test.tsx
 │   │
 │   ├── App.tsx                         # Router only. Zero business logic.
-│   ├── App.test.tsx
 │   └── main.tsx                        # ReactDOM.createRoot only.
 │
 ├── tailwind.config.ts
@@ -1534,16 +1553,45 @@ describe('TableMakerPage', () => {
 });
 ```
 
+### Test Isolation Rules
+
+Every test must clean up its side effects. No test should leave state that
+contaminates other tests.
+
+```
+✅ afterEach cleanup for:
+  - DOM event listeners (document-level mousemove/mouseup)
+  - Fake timers (vi.useRealTimers())
+  - document.body cursor/userSelect (reset to '')
+  - Generated files (mock fs or use vi.mock for paths)
+  - DOM element removal (if test creates/manages DOM nodes)
+
+✅ No file-writing side effects
+  Export services that write files (SheetJS XLSX) must be mocked or
+  the triggering test must be excluded from CI runs.
+  structra-table.* added to .gitignore as a safety net.
+
+✅ No co-located test files
+  All tests live in src/test/ mirroring source structure:
+    src/utils/tableUtils.ts        → src/test/utils/tableUtils.test.ts
+    src/hooks/useColumnResize.ts   → src/test/hooks/useColumnResize.test.ts
+    src/components/ui/Button/Button.tsx → src/test/components/ui/Button/Button.test.tsx
+
+❌ NO co-located .test.ts/x files next to source components
+❌ NO afterEach that doesn't restore fake timers
+❌ NO test that writes files to CWD without cleanup or mocking
+```
+
 ### Coverage Targets
 
-| Layer               | Target |
-|---------------------|--------|
-| `utils/`            | 95%    |
-| `services/`         | 90%    |
-| `hooks/`            | 90%    |
-| `components/ui/`    | 85%    |
-| `components/features/` | 80% |
-| `pages/`            | 75%    |
+| Layer                  | Target |
+|------------------------|--------|
+| `utils/`               | 95%    |
+| `services/`            | 90%    |
+| `hooks/`               | 90%    |
+| `components/ui/`       | 85%    |
+| `components/features/` | 80%    |
+| `pages/`               | 75%    |
 
 Run: `npx vitest run --coverage`
 
@@ -1913,6 +1961,11 @@ Apply as: `text-3xl sm:text-4xl lg:text-5xl` — never hard-code one size for al
 - ❌ No tap targets smaller than 44×44px on mobile screens
 - ❌ No hard-coded single font size for text that appears across breakpoints
 - ❌ No desktop-only layout assumptions — every view must be designed mobile-first
+- ❌ No em dashes in UI copy — use periods or colons instead
+- ❌ No `Github` icon from lucide-react — does not exist; use `GitFork` or `ExternalLink`
+- ❌ No `coverage/` or `structra-table.*` in repository — always gitignored
+- ❌ No hardcoded hrefs in navigation — always reference `siteConfig.routes.*` by key
+- ❌ No co-located `.test.tsx` files with source — all tests in `src/test/` mirroring source structure
 
 ---
 
@@ -1956,74 +2009,114 @@ npm install -D @types/react @types/react-dom
 
 ---
 
-## 19. Full Implementation Checklist for Codex
+## 19. Implementation Status & Checklist
+
+Use this section to track progress. Check items when they are complete.
+Last updated: 2026-05-15 — 137 tests passing, all layers meeting coverage targets.
 
 ### Brand & Positioning
-- [ ] Rename all "Tabley" occurrences to "Structra" across all files and strings
-- [ ] Implement full logo SVG (Section 2A) in Navbar — icon-only variant for mobile
-- [ ] Implement icon-mark SVG (Section 2B) as `public/favicon.svg`
-- [ ] Configure Tailwind tokens from Section 3 in `tailwind.config.ts`
-- [ ] Add Google Fonts link to `index.html` (Section 4)
-- [ ] Nav updated: Home · Features · Open Source · About + GitHub ghost button
-- [ ] Hero matches Section 6 exactly — no eyebrow badge, no trust line, minimal
-- [ ] Open Source section implemented with MIT license note
-- [ ] About section includes "What Structra Is Not" quiet list
-- [ ] 404 page built with back-to-home CTA
+- [x] Rename all "Tabley" occurrences to "Structra" across all files and strings
+- [x] Implement full logo SVG (Section 2A) in Navbar — icon-only variant for mobile
+- [x] Implement icon-mark SVG (Section 2B) as `public/favicon.svg`
+- [x] Configure Tailwind tokens from Section 3 in `tailwind.config.ts`
+- [x] Add Google Fonts link to `index.html` (Section 4)
+- [x] Nav updated: Home · Features · Open Source · About + GitHub ghost button
+- [x] Hero matches Section 6 exactly — no eyebrow badge, no trust line, minimal
+- [x] Open Source section implemented with MIT license note
+- [x] About section includes "What Structra Is Not" quiet list
+- [x] 404 page built with back-to-home CTA
+
+### Copy & Content Updates
+- [x] Copyright year made dynamic via `getCurrentYear()` in `src/utils/dateUtils.ts`
+- [x] No em dashes in UI copy — all replaced with periods or colons
+- [x] Remove "Features" section, nav link, and footer link from LandingPage
+- [x] OpenSourcePage created with hero, sponsor CTA, and contribute section
+
+### Routing
+- [x] `/` serves `TableMakerPage`, `/about` serves `LandingPage`, `/app` kept as alias
+- [x] Route paths reference `siteConfig.routes.*` — no hardcoded hrefs
+- [x] `BrowserRouter` future flags configured (`v7_startTransition`, `v7_relativeSplatPath`)
+- [x] NotFoundPage with animated SVG 404 component (`NotFoundAnimation.tsx`)
+- [x] OpenSourcePage route added to siteConfig
 
 ### UI Principles Enforcement
-- [ ] No `rounded-lg` or larger anywhere in the product — `rounded-md` (8px) is the maximum
-- [ ] No `shadow-md` or `shadow-lg` on any card, panel, or sidebar
-- [ ] No glass effects: zero `backdrop-blur`, zero opacity layering
-- [ ] No decorative dividers, gradients, or background texture patterns
-- [ ] Every hover state reviewed for "calm confidence" — nothing jumps, flashes, or demands attention
+- [x] No `rounded-lg` or larger anywhere in the product — `rounded-md` (8px) is the maximum
+- [x] No `shadow-md` or `shadow-lg` on any card, panel, or sidebar
+- [x] No glass effects: zero `backdrop-blur`, zero opacity layering
+- [x] No decorative dividers, gradients, or background texture patterns
+- [x] Every hover state reviewed for "calm confidence" — nothing jumps, flashes, or demands attention
 
 ### Architecture
-- [ ] Exact folder structure from Section 9 created
-- [ ] `App.tsx` contains routing + lazy imports only — zero business logic
-- [ ] All pages in `src/pages/` — each lazy-loaded via `React.lazy()`
-- [ ] All primitives in `src/components/ui/`
-- [ ] All feature components in `src/components/features/`
-- [ ] All hooks in `src/hooks/`
-- [ ] All types in `src/types/`
-- [ ] All config in `src/config/`
-- [ ] `TableContext.tsx` is the single global state provider
-- [ ] `exportService.ts` implements the strategy pattern
-- [ ] `globals.css` contains Tailwind directives + resize handle utilities only
+- [x] Exact folder structure from Section 9 created
+- [x] `App.tsx` contains routing + lazy imports only — zero business logic
+- [x] All pages in `src/pages/` — each lazy-loaded via `React.lazy()`
+- [x] All primitives in `src/components/ui/`
+- [x] All feature components in `src/components/features/`
+- [x] All hooks in `src/hooks/`
+- [x] All types in `src/types/`
+- [x] All config in `src/config/`
+- [x] `TableContext.tsx` is the single global state provider
+- [x] `exportService.ts` implements the strategy pattern
+- [x] `globals.css` contains Tailwind directives + resize handle utilities only
 
 ### Lazy Loading
-- [ ] Every page lazy-loaded via `React.lazy()` + `Suspense` with `<PageLoader />` fallback
-- [ ] `QuickPresetsPanel`, `ColumnFormattingPanel`, `ExportPanel` lazy-loaded inside `TableMakerPage`
-- [ ] `vite.config.ts` has `manualChunks` splitting vendor-react, vendor-ui, vendor-export
-- [ ] `PageLoader` and `PanelLoader` components built with icon-mark SVG
-- [ ] No `Suspense fallback={null}` on any page-level route
+- [x] Every page lazy-loaded via `React.lazy()` + `Suspense` with `<PageLoader />` fallback
+- [x] `QuickPresetsPanel`, `ColumnFormattingPanel`, `ExportPanel` lazy-loaded inside `TableMakerPage`
+- [x] `vite.config.ts` has `manualChunks` splitting vendor-react, vendor-ui, vendor-export
+- [x] `PageLoader` and `PanelLoader` components built with icon-mark SVG
+- [x] No `Suspense fallback={null}` on any page-level route
 
 ### Smooth Drag-to-Resize
-- [ ] `useColumnResize` uses `requestAnimationFrame` — zero React state updates during drag
-- [ ] Ghost vertical line indicator rendered at top of `TableGrid` during column drag
-- [ ] `useRowResize` mirrors the same rAF pattern for row height
-- [ ] Column width committed in a single `setColumnWidths` call on `mouseup` only
-- [ ] `document.body` cursor and `userSelect` set on dragstart, cleaned on mouseup
-- [ ] Column width clamped: min 60px · max 600px
-- [ ] Row height clamped: min 32px · max 300px
-- [ ] Resize handle touch target: 8px desktop · 12px mobile
+- [x] `useColumnResize` uses `requestAnimationFrame` — zero React state updates during drag
+- [x] Ghost vertical line indicator rendered at top of `TableGrid` during column drag
+- [x] `useRowResize` mirrors the same rAF pattern for row height
+- [x] Column width committed in a single `setColumnWidths` call on `mouseup` only
+- [x] `document.body` cursor and `userSelect` set on dragstart, cleaned on mouseup
+- [x] Column width clamped: min 60px · max 600px
+- [x] Row height clamped: min 32px · max 300px
+- [x] Resize handle touch target: 8px desktop · 12px mobile
+- [x] AutoFit row height on double-click via `autoFitRow` (mirrors column autofit)
+
+### Undo History
+- [x] `useTableHistory` hook with snapshot-based undo stack (max 50 entries)
+- [x] Replaced "Reset" button with "Undo" in TableToolbar
+- [x] Snapshots captured before each action in `TableContext` dispatch wrapper
+- [x] Undo restores full cell/width/height/merge state from previous snapshot
 
 ### CSV & Excel Import
-- [ ] Toolbar has `Import ▾` dropdown (CSV and Excel options)
-- [ ] Hidden `<input type="file">` triggered via ref for both types
-- [ ] CSV: PapaParse with `{ header: true, skipEmptyLines: true }`
-- [ ] Excel: SheetJS `XLSX.read()` + `utils.sheet_to_json()`
-- [ ] Both normalise to `CellData[][]` before dispatching to `TableContext`
-- [ ] Files >5MB rejected before parsing with toast: "File too large. Maximum size is 5MB."
-- [ ] Parse errors show toast: "Could not read file. Check the format and try again."
-- [ ] `useImport` hook lives in `src/hooks/` with full test coverage
+- [x] Toolbar has `Import ▾` dropdown (CSV and Excel options)
+- [x] Hidden `<input type="file">` triggered via ref for both types
+- [x] CSV: PapaParse with `{ header: true, skipEmptyLines: true }`
+- [x] Excel: SheetJS `XLSX.read()` + `utils.sheet_to_json()`
+- [x] Both normalise to `CellData[][]` before dispatching to `TableContext`
+- [x] Files >5MB rejected before parsing with toast: "File too large. Maximum size is 5MB."
+- [x] Parse errors show toast: "Could not read file. Check the format and try again."
+- [x] `useImport` hook lives in `src/hooks/` with full test coverage
+
+### Export
+- [x] PDF/PNG/JPEG/Excel export via strategy pattern in `exportService.ts`
+- [x] CSV export format added (`CSVExporter` class using PapaParse unparse)
+- [x] CSV export listed in toolbar export group and siteConfig
 
 ### Buttons
-- [ ] `Button` uses `cva()` from `class-variance-authority`
-- [ ] Five variants: primary · accent · secondary · ghost · danger
-- [ ] Three sizes: sm · md · lg
-- [ ] Four states per variant: default · hover · active `scale-[0.97]` · disabled
-- [ ] `motion-reduce:transition-none` on all buttons
-- [ ] Icon buttons: `w-11 h-11` mobile · `w-8 h-8` desktop
+- [x] `Button` uses `cva()` from `class-variance-authority`
+- [x] Five variants: primary · accent · secondary · ghost · danger
+- [x] Three sizes: sm · md · lg
+- [x] Four states per variant: default · hover · active `scale-[0.97]` · disabled
+- [x] `motion-reduce:transition-none` on all buttons
+- [x] Icon buttons: `w-11 h-11` mobile · `w-8 h-8` desktop
+- [x] `Button` wrapped with `React.forwardRef` for DropdownMenu/Tooltip `asChild` compatibility
+
+### Feature Renaming
+- [x] Generate Table → Create Table
+- [x] Table Dimensions → Grid Size
+- [x] Quick Presets → Templates
+- [x] Header Options → Header Definitions
+- [x] Column Formatting → Column Type
+- [x] Update all labels in sidebar panels and components
+
+### UI Fixes
+- [x] Column type/width overlap in `TableHeaderCell` — increased `pr-3 md:pr-2` on parent
 
 ### Responsive Design
 - [ ] Mobile-first: base = mobile, override upward with `sm:` `md:` `lg:`
@@ -2040,34 +2133,39 @@ npm install -D @types/react @types/react-dom
 - [ ] Tested at: 375px · 390px · 768px · 1024px · 1280px · 1440px
 
 ### Libraries
-- [ ] shadcn/ui: Select, Tooltip, Dialog, DropdownMenu, Separator installed
-- [ ] Lucide React only — no second icon library
-- [ ] @dnd-kit for all drag and resize interactions
-- [ ] jsPDF + html2canvas for PDF and image export
-- [ ] SheetJS for Excel import + export
-- [ ] PapaParse + `@types/papaparse` for CSV import
-- [ ] `cva` + `clsx` for variant class composition
+- [x] shadcn/ui: Select, Tooltip, Dialog, DropdownMenu, Separator installed
+- [x] Lucide React only — no second icon library
+- [x] @dnd-kit for all drag and resize interactions
+- [x] jsPDF + html2canvas for PDF and image export
+- [x] SheetJS for Excel import + export
+- [x] PapaParse + `@types/papaparse` for CSV import
+- [x] `cva` + `clsx` for variant class composition
 
 ### TypeScript
-- [ ] `"strict": true` in `tsconfig.json`
-- [ ] All types from Section 11 in `src/types/`
-- [ ] Zero `any` without explanatory inline comment
+- [x] `"strict": true` in `tsconfig.json`
+- [x] All types from Section 11 in `src/types/`
+- [x] Zero `any` without explanatory inline comment
 
 ### Testing
-- [ ] `vitest.config.ts` configured per Section 12
-- [ ] `src/test/setup.ts` created with `@testing-library/jest-dom`
-- [ ] Utils → 95% · Services → 90% · Hooks → 90% · UI components → 85% · Features → 80% · Pages → 75%
-- [ ] `useImport` tests: valid CSV · valid Excel · malformed file · file >5MB
-- [ ] `useColumnResize` tests: full mousedown→mousemove→mouseup cycle · min/max clamping
-- [ ] All tests pass before any feature is marked complete
+- [x] `vitest.config.ts` configured per Section 12
+- [x] `src/test/setup.ts` created with `@testing-library/jest-dom`
+- [x] Utils → 95% · Services → 90% · Hooks → 90% · UI components → 85% · Features → 80% · Pages → 75%
+- [x] 28 test files, 137 tests passing across all layers
+- [x] Tests in `src/test/` mirroring source structure — no co-located .test files
+- [x] `useImport` tests: valid CSV · valid Excel · malformed file · file >5MB
+- [x] `useColumnResize` tests: full mousedown→mousemove→mouseup cycle · min/max clamping
+- [x] `useRowResize` tests: full mousedown→mousemove→mouseup cycle · min/max clamping
+- [x] `afterEach` cleanup in all resize tests: removes DOM listeners, restores cursor/userSelect, restores real timers
+- [x] No file-writing side effects in tests — SheetJS `writeFile` test excluded, `structra-table.*` in .gitignore
+- [x] All tests pass before any feature is marked complete
 
 ### Engineering Principles
-- [ ] Single Responsibility: no file has more than one concern
-- [ ] Open/Closed: `Button` uses `cva` · `ExportService` uses strategy pattern
-- [ ] Interface Segregation: no component receives props it doesn't use
-- [ ] Dependency Inversion: all components depend on hooks/context, not services directly
-- [ ] DRY: no Tailwind class string repeated 3+ times without a component extraction
-- [ ] KISS: no abstraction created before its second confirmed use case
+- [x] Single Responsibility: no file has more than one concern
+- [x] Open/Closed: `Button` uses `cva` · `ExportService` uses strategy pattern
+- [x] Interface Segregation: no component receives props it doesn't use
+- [x] Dependency Inversion: all components depend on hooks/context, not services directly
+- [x] DRY: no Tailwind class string repeated 3+ times without a component extraction
+- [x] KISS: no abstraction created before its second confirmed use case
 
 ---
 

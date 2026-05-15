@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { appConfig } from './config'
+import { appConfig } from '../config'
 
 describe('appConfig', () => {
   it('uses the Structra identity from the product guide', () => {

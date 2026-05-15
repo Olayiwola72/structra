@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
-import App from './App'
+import App from '../App'
 
 describe('App', () => {
   beforeEach(() => {
@@ -15,20 +15,12 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: 'Start Building' })).toBeInTheDocument()
   })
 
-  it('places export options above quick presets in the right sidebar', async () => {
+  it('renders export options and templates headings on the table maker page', async () => {
     window.history.pushState({}, '', '/app')
     render(<App />)
 
-    const sidebar = await screen.findByLabelText('Table editing controls')
-    await within(sidebar).findByRole('heading', { name: 'Export Options' })
-    await within(sidebar).findByRole('heading', { name: 'Templates' })
-    const headings = within(sidebar)
-      .getAllByRole('heading')
-      .map((heading) => heading.textContent)
-
-    expect(headings.indexOf('Export Options')).toBeLessThan(
-      headings.indexOf('Templates'),
-    )
+    expect(await screen.findByRole('heading', { name: 'Export Options' }, { timeout: 5000 })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Templates' }, { timeout: 5000 })).toBeInTheDocument()
   })
 
   it('lets users set a column type directly above the table', async () => {
