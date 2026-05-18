@@ -27,6 +27,7 @@ export type HeaderStyle = 'none' | 'first-row' | 'first-column' | 'both'
 export type ColumnFormat = 'text' | 'number' | 'currency' | 'percentage' | 'date' | 'sum' | 'auto-number'
 export type BorderStyle = 'none' | 'solid' | 'dotted' | 'dashed' | 'double'
 export type TextAlign = 'left' | 'center' | 'right'
+export type TableTheme = 'default' | 'minimal' | 'dark-header' | 'striped' | 'academic' | 'monochrome'
 
 export interface TableState {
   cells: CellData[][]
@@ -36,6 +37,7 @@ export interface TableState {
   headerStyle: HeaderStyle
   headerColor: string
   contentColor: string
+  theme: TableTheme
   borderStyle: BorderStyle
   borderColor: string
   contentBgColor: string
@@ -47,4 +49,6 @@ export interface TableState {
   selectedRange: SelectionRange | null
   rows: number
   cols: number
+  freezeRow: boolean
+  freezeCol: boolean
 }

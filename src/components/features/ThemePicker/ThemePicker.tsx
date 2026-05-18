@@ -1,0 +1,47 @@
+import { memo, type ReactNode } from 'react'
+import { TABLE_THEMES, type ThemeDefinition } from '../../../config/tableThemes'
+import { useTableContext } from '../../../context/TableContext'
+import { cn } from '../../../lib/utils'
+import { SectionLabel } from '../../ui/SectionLabel'
+
+const ThemeCard = memo(function ThemeCard({ theme, isSelected, onSelect }: { theme: ThemeDefinition; isSelected: boolean; onSelect: () => void }): ReactNode {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        'cursor-pointer rounded-md border border-border p-2 transition-colors duration-150 hover:border-primary',
+        isSelected && 'ring-2 ring-primary',
+      )}
+      aria-label={theme.label}
+      aria-pressed={isSelected}
+    >
+      <svg width="100%" height="28" viewBox="0 0 60 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" className="mb-1.5 rounded-sm" preserveAspectRatio="none">
+        <rect x="0" y="0" width="60" height="10" rx="1" fill={theme.headerBg} />
+        <rect x="0" y="11" width="60" height="7" rx="0" fill={theme.rowBg} />
+        <rect x="0" y="19" width="60" height="7" rx="0" fill={theme.altRowBg} />
+      </svg>
+      <span className="block text-center text-xs text-text-secondary">{theme.label}</span>
+    </button>
+  )
+})
+
+export function ThemePicker(): ReactNode {
+  const { theme, setTheme } = useTableContext()
+
+  return (
+    <section>
+      <SectionLabel>Table Theme</SectionLabel>
+      <div className="grid grid-cols-3 gap-2">
+        {TABLE_THEMES.map((t) => (
+          <ThemeCard
+            key={t.id}
+            theme={t}
+            isSelected={theme === t.id}
+            onSelect={() => setTheme(t.id)}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}

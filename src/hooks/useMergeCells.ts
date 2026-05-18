@@ -1,15 +1,7 @@
-import { useTableContext } from '../context/TableContext'
+import { useSelectedRange, useTableContext } from '../context/TableContext'
 
-export function useMergeCells(): Pick<
-  ReturnType<typeof useTableContext>,
-  'selectedRange' | 'mergedRanges' | 'selectRange' | 'mergeSelection' | 'unmergeSelection'
-> {
-  const table = useTableContext()
-  return {
-    selectedRange: table.selectedRange,
-    mergedRanges: table.mergedRanges,
-    selectRange: table.selectRange,
-    mergeSelection: table.mergeSelection,
-    unmergeSelection: table.unmergeSelection,
-  }
+export function useMergeCells() {
+  const selectedRange = useSelectedRange()
+  const { mergedRanges, selectRange, mergeSelection, unmergeSelection } = useTableContext()
+  return { selectedRange, mergedRanges, selectRange, mergeSelection, unmergeSelection }
 }

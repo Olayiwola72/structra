@@ -3,6 +3,7 @@ import { siteConfig } from '../config/siteConfig'
 import { useTableContext, useTableData } from '../context/TableContext'
 import { exportTable } from '../services/exportService'
 import type { ExportFormat } from '../types/export.types'
+import { toast, TOAST } from '../utils/toast'
 
 export interface ExportApi {
   isExporting: boolean
@@ -36,6 +37,9 @@ export function useExport(): ExportApi {
         headerStyle: styleRef.current,
         mergedRanges: mergedRef.current,
       })
+      toast.success(TOAST.EXPORT_SUCCESS(format.toUpperCase()))
+    } catch {
+      toast.error(TOAST.EXPORT_ERROR)
     } finally {
       element.classList.remove('is-exporting')
       setIsExporting(false)

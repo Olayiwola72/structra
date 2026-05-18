@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { forwardRef, memo, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { cn } from '../../../lib/utils'
 
 export const buttonVariants = cva(
@@ -34,7 +34,7 @@ export interface ButtonProps
   children: ReactNode
 }
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({
+const ButtonInner = forwardRef<HTMLButtonElement, ButtonProps>(function Button({
   asChild = false,
   className,
   variant,
@@ -58,3 +58,5 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     </Comp>
   )
 })
+
+export const Button = memo(ButtonInner)

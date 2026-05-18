@@ -16,7 +16,7 @@ describe('App', () => {
   })
 
   it('renders export options and templates headings on the table maker page', async () => {
-    window.history.pushState({}, '', '/app')
+    window.history.pushState({}, '', '/')
     render(<App />)
 
     expect(await screen.findByRole('heading', { name: 'Export Options' }, { timeout: 5000 })).toBeInTheDocument()
@@ -25,7 +25,7 @@ describe('App', () => {
 
   it('lets users set a column type directly above the table', async () => {
     const user = userEvent.setup()
-    window.history.pushState({}, '', '/app')
+    window.history.pushState({}, '', '/')
     render(<App />)
 
     const columnType = (await screen.findAllByLabelText('Column type 2'))[0]

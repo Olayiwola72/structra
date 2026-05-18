@@ -25,6 +25,38 @@ export function normalizeTableData(data: string[][], rows: number, cols: number)
   )
 }
 
+export function insertRowAt(cells: CellData[][], index: number): CellData[][] {
+  const colCount = cells[0]?.length ?? 1
+  const newRow = Array.from({ length: colCount }, (_, col) => createCell(index, col))
+  const next = [...cells]
+  next.splice(index, 0, newRow)
+  return next.map((row, ri) =>
+    row.map((cell, ci) => (ri >= index ? { ...cell, id: buildCellId(ri, ci) } : cell)),
+  )
+}
+
+export function deleteRowAt(cells: CellData[][], index: number): CellData[][] {
+  if (cells.length <= 1) return cells
+  return cells.filter((_, i) => i !== index).map((row, ri) =>
+    row.map((cell, ci) => ({ ...cell, id: buildCellId(ri, ci) })),
+  )
+}
+
+export function insertColAt(cells: CellData[][], index: number): CellData[][] {
+  return cells.map((row, ri) => {
+    const next = [...row]
+    next.splice(index, 0, createCell(ri, index))
+    return next.map((cell, ci) => ({ ...cell, id: buildCellId(ri, ci) }))
+  })
+}
+
+export function deleteColAt(cells: CellData[][], index: number): CellData[][] {
+  if ((cells[0]?.length ?? 0) <= 1) return cells
+  return cells.map((row, ri) =>
+    row.filter((_, ci) => ci !== index).map((cell, ci) => ({ ...cell, id: buildCellId(ri, ci) })),
+  )
+}
+
 export function addRow(cells: CellData[][]): CellData[][] {
   const colCount = cells[0]?.length ?? 1
   const nextRowIndex = cells.length

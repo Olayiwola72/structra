@@ -1,20 +1,24 @@
-import type { MouseEvent } from 'react'
-import { useTableContext } from '../context/TableContext'
+import { useCallback, type MouseEvent } from 'react'
+import { useSelectedRange, useTableContext } from '../context/TableContext'
 
 export interface TableSelectionApi {
   selectCell: (row: number, col: number, event?: MouseEvent) => void
 }
 
 export function useTableSelection(): TableSelectionApi {
-  const { selectedRange, selectRange } = useTableContext()
+  const selectedRange = useSelectedRange()
+  const { selectRange } = useTableContext()
 
-  return {
-    selectCell: (row, col, event) => {
+  const selectCell = useCallback(
+    (row: number, col: number, event?: MouseEvent): void => {
       selectRange(
         event?.shiftKey && selectedRange
           ? { ...selectedRange, endRow: row, endCol: col }
           : { startRow: row, startCol: col, endRow: row, endCol: col },
       )
     },
-  }
+    [selectRange, selectedRange],
+  )
+
+  return { selectCell }
 }

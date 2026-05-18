@@ -8,7 +8,7 @@ const options = siteConfig.labels.headerStyleOptions
 const labelByValue = new Map(options.map((o) => [o.value, o.label]))
 
 export function HeaderOptionsPanel(): ReactNode {
-  const { headerStyle, setHeaderStyle } = useTableContext()
+  const { headerStyle, setHeaderStyle, freezeRow, freezeCol, setFreezeRow, setFreezeCol } = useTableContext()
   const currentLabel = useMemo(() => labelByValue.get(headerStyle) ?? '', [headerStyle])
   return (
     <section>
@@ -22,6 +22,16 @@ export function HeaderOptionsPanel(): ReactNode {
         </select>
       </label>
       <p className="mt-2 text-xs text-text-muted">Current: {currentLabel}</p>
+      <div className="mt-4 space-y-2 border-t border-border pt-4">
+        <label className="flex items-center gap-2 text-sm text-text-primary cursor-pointer">
+          <input type="checkbox" checked={freezeRow} onChange={(e) => setFreezeRow(e.target.checked)} className="h-4 w-4 rounded border-border text-primary" />
+          Freeze header row
+        </label>
+        <label className="flex items-center gap-2 text-sm text-text-primary cursor-pointer">
+          <input type="checkbox" checked={freezeCol} onChange={(e) => setFreezeCol(e.target.checked)} className="h-4 w-4 rounded border-border text-primary" />
+          Freeze first column
+        </label>
+      </div>
     </section>
   )
 }

@@ -1,11 +1,11 @@
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 import { exportFormats } from '../../../config/exportConfig'
 import { siteConfig } from '../../../config/siteConfig'
 import type { ExportFormat } from '../../../types/export.types'
 import { Button } from '../../ui/Button'
 import { SectionLabel } from '../../ui/SectionLabel'
 
-export function ExportPanel({
+function ExportPanelRaw({
   onExport,
   isExporting,
 }: {
@@ -28,3 +28,5 @@ export function ExportPanel({
     </section>
   )
 }
+
+export const ExportPanel = memo(ExportPanelRaw)

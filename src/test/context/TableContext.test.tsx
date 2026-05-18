@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import type { ReactNode } from 'react'
-import { TableProvider, useTableContext, useTableData } from '../../context/TableContext'
+import { TableProvider, useSelectedRange, useTableContext, useTableData } from '../../context/TableContext'
 
 function Wrapper({ children }: { children: ReactNode }): ReactNode {
   return <TableProvider>{children}</TableProvider>
@@ -9,6 +9,10 @@ function Wrapper({ children }: { children: ReactNode }): ReactNode {
 
 function useCombined() {
   return { ...useTableContext(), ...useTableData() }
+}
+
+function useWithSelection() {
+  return { ...useTableContext(), selectedRange: useSelectedRange() }
 }
 
 describe('TableContext', () => {
@@ -89,7 +93,7 @@ describe('TableContext', () => {
   })
 
   it('selects a range', () => {
-    const { result } = renderHook(() => useTableContext(), { wrapper: Wrapper })
+    const { result } = renderHook(() => useWithSelection(), { wrapper: Wrapper })
     act(() => result.current.selectRange({ startRow: 0, startCol: 0, endRow: 2, endCol: 2 }))
     expect(result.current.selectedRange).toEqual({ startRow: 0, startCol: 0, endRow: 2, endCol: 2 })
   })
@@ -149,6 +153,8 @@ describe('TableContext', () => {
   })
 
   it('throws when used outside TableProvider', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     expect(() => renderHook(() => useTableContext())).toThrow('useTableContext must be used inside TableProvider')
+    spy.mockRestore()
   })
 })

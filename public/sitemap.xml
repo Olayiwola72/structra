@@ -21,6 +21,41 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://tablesmit.com/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tablesmit.com/blog/how-to-make-a-table-in-markdown</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tablesmit.com/blog/copy-excel-table-to-web</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tablesmit.com/blog/5-free-online-table-makers-compared</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tablesmit.com/blog/export-table-to-pdf</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tablesmit.com/blog/best-table-tool-for-researchers</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tablesmit.com/blog/merge-cells-online-table</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://tablesmit.com/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>

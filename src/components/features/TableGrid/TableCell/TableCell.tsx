@@ -11,11 +11,14 @@ export interface TableCellProps {
   cell: CellData
   row: number
   col: number
+  freezeRow: boolean
+  freezeCol: boolean
   headerStyle: HeaderStyle
   headerColor: string
   headerTextColor: string
   contentColor: string
   contentBgColor: string
+  themeRowBg?: string
   borderStyle: BorderStyle
   borderColor: string
   rowColor: string
@@ -34,17 +37,22 @@ export interface TableCellProps {
   onAutoFitColumn: (col: number) => void
   onKeyDown: (row: number, col: number, event: React.KeyboardEvent) => void
   onContextMenu: (row: number, col: number, event: React.MouseEvent) => void
+  isFindMatch?: boolean
+  isCurrentMatch?: boolean
 }
 
 function TableCellRaw({
   cell,
   row,
   col,
+  freezeRow,
+  freezeCol,
   headerStyle,
   headerColor,
   headerTextColor,
   contentColor,
   contentBgColor,
+  themeRowBg,
   borderStyle,
   borderColor,
   rowColor,
@@ -63,25 +71,39 @@ function TableCellRaw({
   columnWidth,
   onKeyDown,
   onContextMenu,
+  isFindMatch,
+  isCurrentMatch,
 }: TableCellProps): ReactNode {
   const CellTag = isHeaderCell(headerStyle, row, col) ? 'th' : 'td'
   const selected = selectedRange ? isCellInMergeRange(cell.id, { ...normalizeSelection(selectedRange) }) : false
   const displayValue = formatCellValue(cell.value, cell.format ?? 'text', row)
   const isFormula = (cell.format ?? 'text') === 'auto-number' || (cell.format ?? 'text') === 'sum'
+
+  const stickyClasses = cn(
+    freezeRow && row === 0 && 'sticky top-0 z-10',
+    freezeCol && col === 0 && 'sticky left-0 z-10',
+    freezeRow && freezeCol && row === 0 && col === 0 && 'z-20',
+  )
+
   const effectiveBg = CellTag === 'th'
     ? headerColor
-    : (cellColor || columnColor || rowColor || contentBgColor || undefined)
+    : (cellColor || columnColor || rowColor || themeRowBg || contentBgColor || (stickyClasses ? '#ffffff' : undefined))
 
   return (
     <CellTag
-      role={CellTag === 'td' ? 'cell' : 'columnheader'}
+      role={CellTag === 'td' ? 'gridcell' : 'columnheader'}
       colSpan={merge ? merge.endCol - merge.startCol + 1 : undefined}
       rowSpan={merge ? merge.endRow - merge.startRow + 1 : undefined}
+      aria-colindex={col + 1}
+      aria-selected={selected}
       className={cn(
         'relative min-w-20 p-0 align-top text-xs sm:text-sm',
         CellTag === 'th' ? 'font-semibold text-text-inverse' : 'font-normal text-text-primary',
         selected && 'ring-2 ring-inset ring-primary',
         merge && 'bg-primary-light',
+        isFindMatch && !isCurrentMatch && 'bg-accent-light',
+        isCurrentMatch && 'ring-2 ring-accent',
+        stickyClasses,
       )}
       style={{
         height: rowHeight,
@@ -140,6 +162,7 @@ export const TableCell = memo(TableCellRaw, (prev, next) => {
   if (prev.headerTextColor !== next.headerTextColor) return false
   if (prev.contentColor !== next.contentColor) return false
   if (prev.contentBgColor !== next.contentBgColor) return false
+  if (prev.themeRowBg !== next.themeRowBg) return false
   if (prev.borderStyle !== next.borderStyle) return false
   if (prev.borderColor !== next.borderColor) return false
   if (prev.rowColor !== next.rowColor) return false
@@ -148,9 +171,13 @@ export const TableCell = memo(TableCellRaw, (prev, next) => {
   if (prev.textAlign !== next.textAlign) return false
   if (prev.rowHeight !== next.rowHeight) return false
   if (prev.columnWidth !== next.columnWidth) return false
+  if (prev.freezeRow !== next.freezeRow) return false
+  if (prev.freezeCol !== next.freezeCol) return false
   if (prev.selectedRange !== next.selectedRange) return false
   if (prev.merge !== next.merge) {
     if (prev.merge?.key !== next.merge?.key) return false
   }
+  if (prev.isFindMatch !== next.isFindMatch) return false
+  if (prev.isCurrentMatch !== next.isCurrentMatch) return false
   return true
 })

@@ -1,15 +1,17 @@
 import { ExternalLink } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import logoUrl from '../../../assets/logo.svg'
 import { exportFormats } from '../../../config/exportConfig'
 import { siteConfig } from '../../../config/siteConfig'
+import { Logo } from '../../ui/Logo'
 import { getCurrentYear } from '../../../utils/dateUtils'
 
 const { brand, routes } = siteConfig
 
 const productLinks = [
   { label: 'Home', href: routes.home },
+  { label: 'Blog', href: routes.blog },
+  { label: 'Changelog', href: routes.changelog },
   { label: 'Open Source', href: routes.openSource },
 ]
 
@@ -22,10 +24,10 @@ const companyLinks = [
 
 export function Footer(): ReactNode {
   return (
-    <footer className="border-t border-border bg-white py-10">
-      <div className="mx-auto grid max-w-content gap-8 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-        <div className="space-y-3 sm:col-span-2">
-          <img src={logoUrl} alt={brand.name} className="h-9 w-[165px]" />
+    <footer className="border-t border-border bg-white py-4">
+      <div className="mx-auto grid max-w-content gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+        <div className="space-y-3 sm:col-span-2 lg:col-span-1">
+          <Logo variant="full" className="h-9 w-[165px]" />
           <p className="text-sm text-text-secondary">{brand.tagline}</p>
           <p className="text-xs text-text-muted">
             © {getCurrentYear()} {brand.name}. Open source under MIT license.

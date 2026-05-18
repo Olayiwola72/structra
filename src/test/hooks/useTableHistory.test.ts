@@ -23,6 +23,9 @@ function fakeState(overrides: Partial<TableState> = {}): TableState {
     selectedRange: null,
     rows: 1,
     cols: 1,
+    freezeRow: false,
+    freezeCol: false,
+    theme: 'default',
     ...overrides,
   }
 }

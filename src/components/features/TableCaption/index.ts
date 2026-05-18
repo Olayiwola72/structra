@@ -1,1 +1,1 @@
-export { TableCaption } from './TableCaption'
+export { TableCaption, type CaptionAlignment } from './TableCaption'

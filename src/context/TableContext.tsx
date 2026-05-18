@@ -18,21 +18,24 @@ import {
   MAX_COLS,
   MAX_ROWS,
 } from '../config/tableDefaults'
+import { TABLE_THEMES } from '../config/tableThemes'
 import { siteConfig } from '../config/siteConfig'
-import type { BorderStyle, CellData, ColumnFormat, HeaderStyle, MergeRange, SelectionRange, TableState, TextAlign } from '../types/table.types'
+import type { BorderStyle, CellData, ColumnFormat, HeaderStyle, MergeRange, SelectionRange, TableState, TableTheme, TextAlign } from '../types/table.types'
 import type { PresetDefinition } from '../types/ui.types'
 import { useTableHistory } from '../hooks/useTableHistory'
-import { formatCellValue } from '../utils/formatUtils'
 import { rangeFromSelection, isSingleCellRange, normalizeSelection } from '../utils/mergeUtils'
 import {
   addColumn as addColumnToCells,
   addRow as addRowToCells,
+  deleteColAt as deleteColFromCells,
+  deleteRowAt as deleteRowFromCells,
   generateEmptyTable,
+  insertColAt as insertColToCells,
+  insertRowAt as insertRowToCells,
   normalizeTableData,
   removeColumn as removeColumnFromCells,
   removeRow as removeRowFromCells,
   updateCellValue,
-  updateColumnFormat,
 } from '../utils/tableUtils'
 
 type TableAction =
@@ -40,9 +43,13 @@ type TableAction =
   | { type: 'setCells'; cells: CellData[][] }
   | { type: 'updateCell'; cellId: string; value: string }
   | { type: 'addRow' }
+  | { type: 'insertRowAt'; index: number }
   | { type: 'removeRow' }
+  | { type: 'deleteRowAt'; index: number }
   | { type: 'addColumn' }
+  | { type: 'insertColAt'; index: number }
   | { type: 'removeColumn' }
+  | { type: 'deleteColAt'; index: number }
   | { type: 'clearAll' }
   | { type: 'setHeaderStyle'; headerStyle: HeaderStyle }
   | { type: 'setHeaderColor'; color: string }
@@ -61,6 +68,9 @@ type TableAction =
   | { type: 'setCellColor'; cellId: string; color: string }
   | { type: 'setColumnTextAlign'; col: number; align: TextAlign }
   | { type: 'setCellTextAlign'; cellId: string; align: TextAlign }
+  | { type: 'setFreezeRow'; freeze: boolean }
+  | { type: 'setFreezeCol'; freeze: boolean }
+  | { type: 'setTheme'; theme: TableTheme }
   | { type: 'applyPreset'; preset: PresetDefinition }
   | { type: 'UNDO'; state: TableState }
 
@@ -69,9 +79,13 @@ interface TableActions {
   setCells: (cells: CellData[][]) => void
   updateCell: (cellId: string, value: string) => void
   addRow: () => void
+  insertRowAt: (index: number) => void
   removeRow: () => void
+  deleteRowAt: (index: number) => void
   addColumn: () => void
+  insertColAt: (index: number) => void
   removeColumn: () => void
+  deleteColAt: (index: number) => void
   clearAll: () => void
   setHeaderStyle: (headerStyle: HeaderStyle) => void
   setHeaderColor: (color: string) => void
@@ -91,6 +105,9 @@ interface TableActions {
   setColumnTextAlign: (col: number, align: TextAlign) => void
   setCellTextAlign: (cellId: string, align: TextAlign) => void
   applyPreset: (preset: PresetDefinition) => void
+  setFreezeRow: (freeze: boolean) => void
+  setFreezeCol: (freeze: boolean) => void
+  setTheme: (theme: TableTheme) => void
   undo: () => void
   canUndo: boolean
   historyDepth: number
@@ -105,6 +122,7 @@ interface TableStateFields {
   headerStyle: HeaderStyle
   headerColor: string
   contentColor: string
+  theme: TableTheme
   borderStyle: BorderStyle
   borderColor: string
   contentBgColor: string
@@ -113,7 +131,8 @@ interface TableStateFields {
   columnTextAlign: TextAlign[]
   cellColors: Record<string, string>
   cellTextAlign: Record<string, string>
-  selectedRange: SelectionRange | null
+  freezeRow: boolean
+  freezeCol: boolean
 }
 
 interface TableCellsValue {
@@ -124,6 +143,10 @@ type TableContextValue = TableStateFields & TableActions
 
 const TableContext = createContext<TableContextValue | null>(null)
 const TableCellsContext = createContext<TableCellsValue | null>(null)
+const TableSelectionCtx = createContext<SelectionRange | null>(null)
+
+const STORAGE_KEY = 'tablesmit-state'
+const SESSION_KEY = 'tablesmit-session'
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(Math.max(Math.trunc(Number.isFinite(value) ? value : min), min), max)
@@ -139,12 +162,15 @@ const initialState: TableState = {
   borderStyle: DEFAULT_BORDER_STYLE,
   borderColor: DEFAULT_BORDER_COLOR,
   contentBgColor: '',
+  theme: 'default',
   rowColors: Array.from({ length: DEFAULT_ROWS }, () => ''),
   columnColors: Array.from({ length: DEFAULT_COLS }, () => ''),
   columnTextAlign: Array.from({ length: DEFAULT_COLS }, () => 'left' as TextAlign),
   cellColors: {},
   cellTextAlign: {},
   selectedRange: null,
+  freezeRow: false,
+  freezeCol: false,
   rows: DEFAULT_ROWS,
   cols: DEFAULT_COLS,
 }
@@ -239,6 +265,30 @@ function reducer(state: TableState, action: TableAction): TableState {
         mergedRanges: removeInvalidMerges(state.mergedRanges, rows, state.cols),
       }
     }
+    case 'insertRowAt': {
+      if (state.rows >= MAX_ROWS) return state
+      const ir = Math.min(action.index, state.rows)
+      return {
+        ...state,
+        rows: state.rows + 1,
+        cells: insertRowToCells(state.cells, ir),
+        rowHeights: [...state.rowHeights.slice(0, ir), DEFAULT_ROW_HEIGHT, ...state.rowHeights.slice(ir)],
+        rowColors: [...state.rowColors.slice(0, ir), '', ...state.rowColors.slice(ir)],
+      }
+    }
+    case 'deleteRowAt': {
+      if (state.rows <= 1) return state
+      const dr = Math.min(action.index, state.rows - 1)
+      const newRows = state.rows - 1
+      return {
+        ...state,
+        rows: newRows,
+        cells: deleteRowFromCells(state.cells, dr),
+        rowHeights: state.rowHeights.filter((_, i) => i !== dr),
+        rowColors: state.rowColors.filter((_, i) => i !== dr),
+        mergedRanges: removeInvalidMerges(state.mergedRanges, newRows, state.cols),
+      }
+    }
     case 'addColumn': {
       if (state.cols >= MAX_COLS) return state
       return {
@@ -261,6 +311,32 @@ function reducer(state: TableState, action: TableAction): TableState {
         columnColors: state.columnColors.slice(0, -1),
         columnTextAlign: state.columnTextAlign.slice(0, -1),
         mergedRanges: removeInvalidMerges(state.mergedRanges, state.rows, cols),
+      }
+    }
+    case 'insertColAt': {
+      if (state.cols >= MAX_COLS) return state
+      const ic = Math.min(action.index, state.cols)
+      return {
+        ...state,
+        cols: state.cols + 1,
+        cells: insertColToCells(state.cells, ic),
+        columnWidths: [...state.columnWidths.slice(0, ic), DEFAULT_COLUMN_WIDTH, ...state.columnWidths.slice(ic)],
+        columnColors: [...state.columnColors.slice(0, ic), '', ...state.columnColors.slice(ic)],
+        columnTextAlign: [...state.columnTextAlign.slice(0, ic), 'left' as TextAlign, ...state.columnTextAlign.slice(ic)],
+      }
+    }
+    case 'deleteColAt': {
+      if (state.cols <= 1) return state
+      const dc = Math.min(action.index, state.cols - 1)
+      const newCols = state.cols - 1
+      return {
+        ...state,
+        cols: newCols,
+        cells: deleteColFromCells(state.cells, dc),
+        columnWidths: state.columnWidths.filter((_, i) => i !== dc),
+        columnColors: state.columnColors.filter((_, i) => i !== dc),
+        columnTextAlign: state.columnTextAlign.filter((_, i) => i !== dc),
+        mergedRanges: removeInvalidMerges(state.mergedRanges, state.rows, newCols),
       }
     }
     case 'clearAll':
@@ -338,33 +414,34 @@ function reducer(state: TableState, action: TableAction): TableState {
         ...state,
         cellColors: { ...state.cellColors, [action.cellId]: action.color },
       }
+    case 'setColumnFormat':
+      return {
+        ...state,
+        cells: state.cells.map((row) =>
+          row.map((cell, ci) => (ci === action.col ? { ...cell, format: action.format } : cell)),
+        ),
+      }
     case 'setColumnTextAlign':
       return {
         ...state,
         columnTextAlign: state.columnTextAlign.map((align, i) => (i === action.col ? action.align : align)),
       }
     case 'setCellTextAlign':
+      return { ...state, cellTextAlign: { ...state.cellTextAlign, [action.cellId]: action.align } }
+    case 'setFreezeRow':
+      return { ...state, freezeRow: action.freeze }
+    case 'setFreezeCol':
+      return { ...state, freezeCol: action.freeze }
+    case 'setTheme': {
+      const themeConfig = TABLE_THEMES.find((t) => t.id === action.theme)
+      if (!themeConfig) return state
       return {
         ...state,
-        cellTextAlign: { ...state.cellTextAlign, [action.cellId]: action.align },
+        theme: action.theme,
+        headerColor: themeConfig.headerBg,
+        borderColor: themeConfig.borderColor,
       }
-    case 'setColumnFormat':
-      return {
-        ...state,
-        cells: updateColumnFormat(
-          state.cells.map((row, rowIndex) =>
-            row.map((cell, colIndex) => {
-              if (colIndex !== action.col || isHeaderCell(state.headerStyle, rowIndex, colIndex)) return cell
-              const nextValue = action.format === 'auto-number'
-                ? String(rowIndex + 1)
-                : formatCellValue(cell.value, action.format)
-              return { ...cell, value: nextValue }
-            }),
-          ),
-          action.col,
-          action.format,
-        ),
-      }
+    }
     case 'applyPreset': {
       const cells = normalizeTableData(action.preset.data ?? [], action.preset.rows, action.preset.cols)
       return {
@@ -399,9 +476,33 @@ export function isHeaderCell(headerStyle: HeaderStyle, row: number, col: number)
 }
 
 export function TableProvider({ children }: { children: ReactNode }): ReactNode {
-  const [state, dispatch] = useReducer(reducer, initialState)
+  const [state, dispatch] = useReducer(reducer, initialState as TableState, () => {
+    if (!sessionStorage.getItem(SESSION_KEY)) {
+      try { localStorage.removeItem(STORAGE_KEY) } catch { /* ignore */ }
+      sessionStorage.setItem(SESSION_KEY, '1')
+      return initialState
+    }
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw) as TableState
+        if (parsed.cells?.length) return parsed
+      }
+    } catch { /* corrupt data — start fresh */ }
+    return initialState
+  })
   const stateRef = useRef(state)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const { recordSnapshot, undo: popHistory, canUndo, historyDepth } = useTableHistory()
+
+  useEffect(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) }
+      catch { /* quota exceeded or private browsing */ }
+    }, 400)
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current) }
+  }, [state])
 
   useEffect(() => { stateRef.current = state }, [state])
 
@@ -430,9 +531,13 @@ export function TableProvider({ children }: { children: ReactNode }): ReactNode 
       setCells: (cells) => dispatchWithHistory({ type: 'setCells', cells }),
       updateCell: (cellId, value) => dispatchWithHistory({ type: 'updateCell', cellId, value }),
       addRow: () => dispatchWithHistory({ type: 'addRow' }),
+      insertRowAt: (index) => dispatchWithHistory({ type: 'insertRowAt', index }),
       removeRow: () => dispatchWithHistory({ type: 'removeRow' }),
+      deleteRowAt: (index) => dispatchWithHistory({ type: 'deleteRowAt', index }),
       addColumn: () => dispatchWithHistory({ type: 'addColumn' }),
+      insertColAt: (index) => dispatchWithHistory({ type: 'insertColAt', index }),
       removeColumn: () => dispatchWithHistory({ type: 'removeColumn' }),
+      deleteColAt: (index) => dispatchWithHistory({ type: 'deleteColAt', index }),
       clearAll: () => dispatchWithHistory({ type: 'clearAll' }),
       setHeaderStyle: (headerStyle) => dispatchWithHistory({ type: 'setHeaderStyle', headerStyle }),
       setHeaderColor: (color) => dispatchWithHistory({ type: 'setHeaderColor', color }),
@@ -452,6 +557,9 @@ export function TableProvider({ children }: { children: ReactNode }): ReactNode 
       setColumnTextAlign: (col, align) => dispatchWithHistory({ type: 'setColumnTextAlign', col, align }),
       setCellTextAlign: (cellId, align) => dispatchWithHistory({ type: 'setCellTextAlign', cellId, align }),
       applyPreset: (preset) => dispatchWithHistory({ type: 'applyPreset', preset }),
+      setFreezeRow: (freeze) => dispatchWithHistory({ type: 'setFreezeRow', freeze }),
+      setFreezeCol: (freeze) => dispatchWithHistory({ type: 'setFreezeCol', freeze }),
+      setTheme: (theme) => dispatchWithHistory({ type: 'setTheme', theme }),
       undo,
       canUndo,
       historyDepth,
@@ -463,6 +571,8 @@ export function TableProvider({ children }: { children: ReactNode }): ReactNode 
     () => ({ cells: state.cells }),
     [state.cells],
   )
+
+  const selectionValue = useMemo(() => state.selectedRange, [state.selectedRange])
 
   const mainValue = useMemo<TableContextValue>(
     () => ({
@@ -477,12 +587,14 @@ export function TableProvider({ children }: { children: ReactNode }): ReactNode 
       borderStyle: state.borderStyle,
       borderColor: state.borderColor,
       contentBgColor: state.contentBgColor,
+      theme: state.theme,
       rowColors: state.rowColors,
       columnColors: state.columnColors,
       columnTextAlign: state.columnTextAlign,
       cellColors: state.cellColors,
       cellTextAlign: state.cellTextAlign,
-      selectedRange: state.selectedRange,
+      freezeRow: state.freezeRow,
+      freezeCol: state.freezeCol,
       ...actions,
     }),
     [
@@ -497,21 +609,25 @@ export function TableProvider({ children }: { children: ReactNode }): ReactNode 
       state.borderStyle,
       state.borderColor,
       state.contentBgColor,
+      state.theme,
       state.rowColors,
       state.columnColors,
       state.columnTextAlign,
       state.cellColors,
       state.cellTextAlign,
-      state.selectedRange,
+      state.freezeRow,
+      state.freezeCol,
       actions,
     ],
   )
 
   return (
     <TableCellsContext.Provider value={cellsValue}>
-      <TableContext.Provider value={mainValue}>
-        {children}
-      </TableContext.Provider>
+      <TableSelectionCtx.Provider value={selectionValue}>
+        <TableContext.Provider value={mainValue}>
+          {children}
+        </TableContext.Provider>
+      </TableSelectionCtx.Provider>
     </TableCellsContext.Provider>
   )
 }
@@ -530,4 +646,8 @@ export function useTableData(): TableCellsValue {
     throw new Error('useTableData must be used inside TableProvider')
   }
   return context
+}
+
+export function useSelectedRange(): SelectionRange | null {
+  return useContext(TableSelectionCtx)
 }

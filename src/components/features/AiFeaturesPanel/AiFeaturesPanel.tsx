@@ -4,6 +4,7 @@ import { siteConfig } from '../../../config/siteConfig'
 import { Badge } from '../../ui/Badge'
 import { Button } from '../../ui/Button'
 import { SectionLabel } from '../../ui/SectionLabel'
+import { toast, TOAST } from '../../../utils/toast'
 
 export function AiFeaturesPanel(): ReactNode {
   const { brand, labels } = siteConfig
@@ -23,7 +24,7 @@ export function AiFeaturesPanel(): ReactNode {
         ))}
       </ul>
       <p className="mt-4 text-xs text-text-muted">{labels.aiFeatureNote}</p>
-      <Button variant="secondary" size="sm" className="mt-4 w-full" disabled>
+      <Button variant="secondary" size="sm" className="mt-4 w-full" onClick={() => toast.info(TOAST.AI_COMING_SOON)}>
         {labels.joinWaitlist}
       </Button>
       <a

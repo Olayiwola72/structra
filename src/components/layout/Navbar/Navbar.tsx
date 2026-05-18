@@ -1,34 +1,36 @@
 import { ExternalLink, Menu, Moon, Sun, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import logoUrl from '../../../assets/logo.svg'
 import { brandHomeAriaLabel, siteConfig } from '../../../config/siteConfig'
 import { KEY_ESCAPE } from '../../../constants/keys'
 import { Button } from '../../ui/Button'
 import { IconButton } from '../../ui/IconButton'
+import { Logo } from '../../ui/Logo'
 import { useTheme } from '../../../hooks/useTheme'
 
-const { brand, labels, routes } = siteConfig
+const { brand, routes } = siteConfig
 
 export function Navbar(): ReactNode {
   const [isOpen, setIsOpen] = useState(false)
   const { theme, toggle } = useTheme()
   const homeAria = brandHomeAriaLabel()
+  const logoTheme = theme === 'dark' ? 'dark' : 'light'
 
   useEffect(() => {
+    if (!isOpen) return
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key === KEY_ESCAPE) setIsOpen(false)
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [isOpen])
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-white dark:border-slate-700 dark:bg-slate-900">
       <div className="mx-auto flex h-14 max-w-content items-center justify-between px-4 sm:px-6 md:h-nav lg:px-8">
         <Link to={routes.home} aria-label={homeAria} className="flex items-center">
-          <img src="/favicon.svg" alt="" className="h-8 w-8 md:hidden" />
-          <img src={logoUrl} alt={brand.name} className="hidden h-9 w-[165px] md:block" />
+          <Logo variant="icon" theme={logoTheme} className="h-8 w-8 md:hidden" />
+          <Logo variant="full" theme={logoTheme} className="hidden h-9 w-[165px] md:block" />
         </Link>
 
         <nav aria-label="Primary navigation" className="hidden items-center gap-6 md:flex">
@@ -49,9 +51,6 @@ export function Navbar(): ReactNode {
             icon={theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             onClick={toggle}
           />
-          <Button asChild variant="primary" size="md">
-            <Link to={routes.home}>{labels.startBuilding}</Link>
-          </Button>
           <Button asChild variant="ghost" size="sm">
             <a href={brand.githubUrl} target="_blank" rel="noreferrer">
               GitHub <ExternalLink size={14} aria-hidden="true" />
@@ -77,7 +76,7 @@ export function Navbar(): ReactNode {
           />
           <aside className="fixed bottom-0 right-0 top-0 z-50 w-[280px] border-l border-border bg-white p-6 md:hidden">
             <div className="mb-8 flex items-center justify-between">
-              <img src={logoUrl} alt={brand.name} className="h-9 w-[165px]" />
+              <Logo variant="full" theme={logoTheme} className="h-9 w-[165px]" />
               <IconButton
                 aria-label="Close menu"
                 icon={<X size={20} aria-hidden="true" />}
@@ -95,11 +94,6 @@ export function Navbar(): ReactNode {
                   {item.label}
                 </Link>
               ))}
-              <Button asChild variant="primary" size="md" className="mt-4">
-                <Link to={routes.home} onClick={() => setIsOpen(false)}>
-                  {labels.startBuilding}
-                </Link>
-              </Button>
               <Button asChild variant="ghost" size="sm">
                 <a
                   href={brand.githubUrl}

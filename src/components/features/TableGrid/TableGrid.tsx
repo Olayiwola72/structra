@@ -1,21 +1,30 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
-import { AlignCenter, AlignLeft, AlignRight, Clipboard, Loader2, PaintBucket, Ruler, TextSelect } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { AUTOFIT_PADDING, MAX_COLUMN_WIDTH, MAX_ROW_HEIGHT, MIN_COLUMN_WIDTH, MIN_ROW_HEIGHT } from '../../../config/tableDefaults'
-import { isHeaderCell, useTableContext, useTableData } from '../../../context/TableContext'
-import { siteConfig } from '../../../config/siteConfig'
+import { isHeaderCell, useSelectedRange, useTableContext, useTableData } from '../../../context/TableContext'
 import { KEY_ESCAPE } from '../../../constants/keys'
-import type { ColumnFormat, TextAlign } from '../../../types/table.types'
 import { useColumnResize } from '../../../hooks/useColumnResize'
 import { useRowResize } from '../../../hooks/useRowResize'
 import { useTableSelection } from '../../../hooks/useTableSelection'
+import { TABLE_THEMES } from '../../../config/tableThemes'
 import { computeColumnSum, getContrastText } from '../../../utils/formatUtils'
 import { isRangeAnchor } from '../../../utils/mergeUtils'
 import { normalizeTableData, sortRows } from '../../../utils/tableUtils'
+import { toast, TOAST } from '../../../utils/toast'
 import { TableCell } from './TableCell'
+import { TableCtxMenu } from './TableCtxMenu'
+import type { CtxData } from './TableCtxMenu'
 import { TableHeaderCell } from './TableHeaderCell'
 
-export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> }): ReactNode {
+interface TableGridProps {
+  tableRef: RefObject<HTMLDivElement>
+  findMatches?: Array<{ row: number; col: number }>
+  currentFindMatch?: { row: number; col: number } | null
+}
+
+export function TableGrid({ tableRef, findMatches, currentFindMatch }: TableGridProps): ReactNode {
   const { cells } = useTableData()
+  const selectedRange = useSelectedRange()
   const {
     rows,
     cols,
@@ -25,7 +34,6 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
     headerColor,
     contentColor,
     contentBgColor,
-    selectedRange,
     mergedRanges,
     borderStyle,
     borderColor,
@@ -34,6 +42,9 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
     columnTextAlign,
     cellColors,
     cellTextAlign,
+    freezeRow,
+    freezeCol,
+    theme,
     updateCell,
     setColumnWidth,
     setRowHeight,
@@ -43,12 +54,18 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
     setCellColor,
     setColumnTextAlign,
     setCellTextAlign,
+    insertRowAt,
+    deleteRowAt,
+    insertColAt,
+    deleteColAt,
     setCells,
     undo,
+    canUndo,
   } = useTableContext()
   const { selectCell } = useTableSelection()
   const gridRef = useRef<HTMLTableElement>(null)
   const headerTextColor = useMemo(() => getContrastText(headerColor), [headerColor])
+  const themeConfig = useMemo(() => TABLE_THEMES.find((t) => t.id === theme) ?? TABLE_THEMES[0], [theme])
 
   const { ghostLineRef: columnGhostLineRef, onMouseDown: onColumnResizeStart } = useColumnResize(setColumnWidth)
   const { ghostLineRef: rowGhostLineRef, onMouseDown: onRowResizeStart } = useRowResize(setRowHeight)
@@ -102,6 +119,12 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
     setRowHeight(rowIndex, nextHeight)
   }, [setRowHeight])
 
+  const handleCellBlur = useCallback((cellId: string, value: string, col: number, rowIdx: number): void => {
+    if (!isHeaderCell(headerStyle, rowIdx, col) && cells[rowIdx]?.[col]?.format !== 'auto-number') {
+      updateCell(cellId, value)
+    }
+  }, [headerStyle, cells, updateCell])
+
   const mergeAnchorMap = useMemo(() => {
     const map = new Map<string, (typeof mergedRanges)[number]>()
     for (const range of mergedRanges) {
@@ -126,11 +149,6 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
     }
     return hidden
   }, [mergedRanges])
-
-  type CtxData =
-    | { type: 'cell'; row: number; col: number; x: number; y: number }
-    | { type: 'column'; col: number; x: number; y: number }
-    | null
 
   const sumCols = useMemo(() => {
     const indices: number[] = []
@@ -163,12 +181,16 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
         const target = event.target as HTMLElement
         if (target.closest('[contenteditable]')) return
         event.preventDefault()
+        if (!canUndo) {
+          toast.info(TOAST.UNDO_EMPTY)
+          return
+        }
         undo()
       }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [undo])
+  }, [undo, canUndo])
 
   useEffect(() => {
     const onPaste = async (event: globalThis.ClipboardEvent): Promise<void> => {
@@ -208,7 +230,10 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
           const c = Math.max(...pastedRows.map((row) => row.length))
           const cellData = normalizeTableData(pastedRows, r, c)
           setCells(cellData)
+          toast.success(TOAST.PASTE_SUCCESS(r, c))
         }
+      } catch {
+        toast.error(TOAST.PASTE_ERROR)
       } finally {
         setPasting(false)
       }
@@ -235,6 +260,18 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
       setSortDir(null)
     }
   }, [sortCol, sortDir, sortDisabled])
+
+  const sortAsc = useCallback((col: number): void => {
+    if (sortDisabled) return
+    setSortCol(col)
+    setSortDir('asc')
+  }, [sortDisabled])
+
+  const sortDesc = useCallback((col: number): void => {
+    if (sortDisabled) return
+    setSortCol(col)
+    setSortDir('desc')
+  }, [sortDisabled])
 
   const sortedRows = useMemo(() => {
     if (activeSortCol === null || activeSortDir === null) return cells
@@ -285,68 +322,9 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
     [],
   )
 
-  const colorPresets = [
-    '#FFE4E1', '#FFF0D9', '#FFFACD', '#E8F5E9', '#E3F2FD', '#F3E5F5',
-    '#FFCDD2', '#FFE0B2', '#FFF9C4', '#C8E6C9', '#BBDEFB', '#E1BEE7',
-    '#FF5722', '#FF9800', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0',
-  ]
-
-  const handlePaste = useCallback(async (): Promise<void> => {
-    try {
-      const text = await navigator.clipboard.readText()
-      if (text && ctxMenu?.type === 'cell') {
-        updateCell(`R${ctxMenu.row}C${ctxMenu.col}`, text)
-      }
-    } catch { /* Clipboard read not available */ }
-    closeCtx()
-  }, [ctxMenu, updateCell, closeCtx])
-
   const toggleSub = useCallback((key: string): void => {
     setActiveSub((prev) => (prev === key ? null : key))
   }, [])
-
-  function renderColorPicker(current: string, onChange: (color: string) => void): ReactNode {
-    return (
-      <div>
-        <div className="mb-2 flex flex-wrap gap-1">
-          {colorPresets.map((c) => (
-            <button
-              key={c}
-              type="button"
-              aria-label={c}
-              className={`h-6 w-6 rounded-sm border border-border cursor-pointer transition-transform hover:scale-110 ${current === c ? 'ring-2 ring-primary ring-offset-1' : ''}`}
-              style={{ backgroundColor: c }}
-              onClick={() => { onChange(c); closeCtx() }}
-            />
-          ))}
-        </div>
-        <label className="flex items-center justify-between gap-2 text-xs text-text-secondary">
-          <span>Custom</span>
-          <input
-            type="color"
-            value={current || '#ffffff'}
-            className="h-7 w-10 cursor-pointer rounded-sm border border-border"
-            onChange={(event) => { onChange(event.target.value); closeCtx() }}
-          />
-        </label>
-        {current ? (
-          <button
-            type="button"
-            className="mt-1 w-full rounded-sm px-2 py-1 text-xs text-text-secondary hover:bg-danger hover:text-white transition-colors"
-            onClick={() => { onChange(''); closeCtx() }}
-          >
-            {siteConfig.labels.contextRemoveColor}
-          </button>
-        ) : null}
-      </div>
-    )
-  }
-
-  const alignIcons: Record<string, ReactNode> = {
-    left: <AlignLeft size={14} />,
-    center: <AlignCenter size={14} />,
-    right: <AlignRight size={14} />,
-  }
 
   const navigateToCell = useCallback(
     (nextRow: number, nextCol: number): void => {
@@ -395,6 +373,7 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
   return (
     <div className="relative h-full overflow-auto p-2 sm:p-4">
       <div
+        data-print-hide
         className="mb-2 grid min-w-max border border-border bg-surface"
         style={{ gridTemplateColumns: columnWidths.map((width) => `${width}px`).join(' ') }}
         aria-label="Column formatting controls"
@@ -415,8 +394,8 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
           />
         ))}
       </div>
-      <div ref={tableRef} className="inline-block bg-white">
-        <table ref={gridRef} className="min-w-max border-collapse bg-white">
+      <div ref={tableRef} className="inline-block bg-white" data-table-container>
+        <table ref={gridRef} className="min-w-max border-collapse bg-white" role="grid" aria-label="Table editor" aria-rowcount={rows} aria-colcount={cols}>
           <colgroup>
             {columnWidths.map((width, index) => (
               <col key={index} style={{ width }} />
@@ -424,49 +403,55 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
           </colgroup>
           <tbody>
             {sortedRows.map((row, rowIdx) => {
-              const origRowIdx = sortedToOriginal[rowIdx]
-              return (
-              <tr key={row[0]?.id ?? rowIdx} style={{ height: rowHeights[origRowIdx] }}>
-                {row.map((cell, colIndex) => {
-                  if (hiddenSet.has(cell.id)) return null
-                  const merge = mergeAnchorMap.get(cell.id)
+                  const origRowIdx = sortedToOriginal[rowIdx]
+                  const themeRowBg = theme !== 'default'
+                    ? (theme === 'striped' && origRowIdx % 2 === 1 ? themeConfig.altRowBg : themeConfig.rowBg)
+                    : undefined
                   return (
-                    <TableCell
-                      key={cell.id}
-                      cell={cell}
-                      row={origRowIdx}
-                      col={colIndex}
-                      headerStyle={headerStyle}
-                      headerColor={headerColor}
-                      headerTextColor={headerTextColor}
-                      contentColor={contentColor}
-                      contentBgColor={contentBgColor}
-                      rowHeight={rowHeights[origRowIdx]}
-                      columnWidth={columnWidths[colIndex]}
-                      merge={merge}
-                      selectedRange={selectedRange}
-                      onSelect={selectCell}
-                      onBlur={(cellId, value, col) => {
-                        if (!isHeaderCell(headerStyle, origRowIdx, col) && cells[origRowIdx]?.[col]?.format !== 'auto-number') {
-                          updateCell(cellId, value)
-                        }
-                      }}
-                      borderStyle={borderStyle}
-                      borderColor={borderColor}
-                      rowColor={rowColors[origRowIdx]}
-                      columnColor={columnColors[colIndex] || ''}
-                      cellColor={cellColors[cell.id] ?? ''}
-                      textAlign={cellTextAlign[cell.id] || columnTextAlign[colIndex] || 'left'}
-                      onRowResizeStart={onRowResizeStart}
-                      onAutoFitRow={autoFitRow}
-                      onColumnResizeStart={onColumnResizeStart}
-                      onAutoFitColumn={autoFitColumn}
-                      onKeyDown={handleCellKeyDown}
-                      onContextMenu={handleCellContextMenu}
-                    />
-                  )
-                })}
-              </tr>
+                  <tr key={row[0]?.id ?? rowIdx} role="row" aria-rowindex={origRowIdx + 1} style={{ height: rowHeights[origRowIdx] }}>
+                    {row.map((cell, colIndex) => {
+                      if (hiddenSet.has(cell.id)) return null
+                      const merge = mergeAnchorMap.get(cell.id)
+                      const isFindMatch = findMatches?.some((m) => m.row === origRowIdx && m.col === colIndex) ?? false
+                      const isCurrentFindMatch = currentFindMatch?.row === origRowIdx && currentFindMatch?.col === colIndex
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          cell={cell}
+                          row={origRowIdx}
+                          col={colIndex}
+                          isFindMatch={isFindMatch}
+                          isCurrentMatch={isCurrentFindMatch}
+                          freezeRow={freezeRow}
+                          freezeCol={freezeCol}
+                          headerStyle={headerStyle}
+                          headerColor={headerColor}
+                          headerTextColor={headerTextColor}
+                          contentColor={contentColor}
+                          contentBgColor={contentBgColor}
+                          themeRowBg={themeRowBg}
+                          rowHeight={rowHeights[origRowIdx]}
+                          columnWidth={columnWidths[colIndex]}
+                          merge={merge}
+                          selectedRange={selectedRange}
+                          onSelect={selectCell}
+                          onBlur={(cellId, value, col) => handleCellBlur(cellId, value, col, origRowIdx)}
+                          borderStyle={borderStyle}
+                          borderColor={borderColor}
+                          rowColor={rowColors[origRowIdx]}
+                          columnColor={columnColors[colIndex] || ''}
+                          cellColor={cellColors[cell.id] ?? ''}
+                          textAlign={cellTextAlign[cell.id] || columnTextAlign[colIndex] || 'left'}
+                          onRowResizeStart={onRowResizeStart}
+                          onAutoFitRow={autoFitRow}
+                          onColumnResizeStart={onColumnResizeStart}
+                          onAutoFitColumn={autoFitColumn}
+                          onKeyDown={handleCellKeyDown}
+                          onContextMenu={handleCellContextMenu}
+                        />
+                      )
+                    })}
+                  </tr>
               )
             })}
           </tbody>
@@ -503,225 +488,34 @@ export function TableGrid({ tableRef }: { tableRef: RefObject<HTMLDivElement> })
       <div ref={columnGhostLineRef} className="fixed bottom-0 top-0 z-50 hidden w-px bg-primary pointer-events-none" aria-hidden="true" />
       <div ref={rowGhostLineRef} className="fixed left-0 right-0 z-50 hidden h-px bg-primary pointer-events-none" aria-hidden="true" />
       {ctxMenu ? (
-        <div
-          data-ctx-menu
-          className="fixed z-50 w-64 rounded-md border border-border bg-white py-1 shadow-sm text-sm"
-          style={{ left: ctxMenu.x, top: ctxMenu.y }}
-        >
-          {/* Header */}
-          <div className="px-3 py-1.5 text-xs font-semibold text-text-muted tracking-widest border-b border-border">
-            {ctxMenu.type === 'cell'
-              ? `R${ctxMenu.row + 1} \u00B7 C${ctxMenu.col + 1}`
-              : `Column ${ctxMenu.col + 1}`}
-          </div>
-
-          {ctxMenu.type === 'cell' ? (
-            <>
-              {/* Auto-fit */}
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-primary hover:bg-surface"
-                onClick={() => { autoFitColumn(ctxMenu.col); closeCtx() }}
-              >
-                <Ruler size={14} className="text-text-muted" />
-                {siteConfig.labels.contextAutoFit}
-              </button>
-
-              {/* Background color submenu */}
-              <div>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-primary hover:bg-surface"
-                  onClick={() => toggleSub('bg')}
-                >
-                  <PaintBucket size={14} className="text-text-muted" />
-                  <span className="flex-1">Background</span>
-                  <span className="text-text-muted">{activeSub === 'bg' ? '\u25B2' : '\u25BC'}</span>
-                </button>
-                {activeSub === 'bg' ? (
-                  <div className="border-t border-border px-3 py-2">
-                    <p className="mb-1.5 text-xs font-medium text-text-secondary">{siteConfig.labels.contextColumnBackground}</p>
-                    {renderColorPicker(columnColors[ctxMenu.col] || '', (c) => setColumnColor(ctxMenu.col, c))}
-                    <hr className="my-2 border-border" />
-                    <p className="mb-1.5 text-xs font-medium text-text-secondary">{siteConfig.labels.contextCellBackground}</p>
-                    {renderColorPicker(cellColors[`R${ctxMenu.row}C${ctxMenu.col}`] ?? '', (c) => setCellColor(`R${ctxMenu.row}C${ctxMenu.col}`, c))}
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Column type submenu */}
-              <div>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-primary hover:bg-surface"
-                  onClick={() => toggleSub('type')}
-                >
-                  <TextSelect size={14} className="text-text-muted" />
-                  <span className="flex-1">{siteConfig.labels.contextColumnType}</span>
-                  <span className="text-xs text-text-muted">{cells[0]?.[ctxMenu.col]?.format ?? 'text'}</span>
-                </button>
-                {activeSub === 'type' ? (
-                  <div className="border-t border-border px-3 py-2">
-                    {siteConfig.columnFormats.map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        className={`block w-full rounded-sm px-2 py-1 text-left text-xs hover:bg-surface ${cells[0]?.[ctxMenu.col]?.format === opt.value ? 'font-semibold text-primary' : 'text-text-primary'}`}
-                        onClick={() => { setColumnFormat(ctxMenu.col, opt.value as ColumnFormat); closeCtx() }}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Text alignment submenu */}
-              <div>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-primary hover:bg-surface"
-                  onClick={() => toggleSub('align')}
-                >
-                  {alignIcons[cellTextAlign[`R${ctxMenu.row}C${ctxMenu.col}`] || columnTextAlign[ctxMenu.col] || 'left']}
-                  <span className="flex-1">{siteConfig.labels.contextTextAlign}</span>
-                  <span className="text-text-muted">{activeSub === 'align' ? '\u25B2' : '\u25BC'}</span>
-                </button>
-                {activeSub === 'align' ? (
-                  <div className="border-t border-border px-3 py-2">
-                    {(siteConfig.labels.textAlignOptions as readonly { value: string; label: string }[]).map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        className={`flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left text-xs hover:bg-surface ${(cellTextAlign[`R${ctxMenu.row}C${ctxMenu.col}`] || columnTextAlign[ctxMenu.col] || 'left') === opt.value ? 'font-semibold text-primary' : 'text-text-primary'}`}
-                        onClick={() => { setCellTextAlign(`R${ctxMenu.row}C${ctxMenu.col}`, opt.value as TextAlign); closeCtx() }}
-                      >
-                        {alignIcons[opt.value]}
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Divider */}
-              <div className="border-t border-border my-1" />
-
-              {/* Paste */}
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-primary hover:bg-surface"
-                onClick={handlePaste}
-              >
-                <Clipboard size={14} className="text-text-muted" />
-                {siteConfig.labels.contextPaste}
-              </button>
-
-              {/* Row color */}
-              <div>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-primary hover:bg-surface"
-                  onClick={() => toggleSub('rowColor')}
-                >
-                  <PaintBucket size={14} className="text-text-muted" />
-                  <span className="flex-1">{siteConfig.labels.rowColor}</span>
-                  <span className="text-text-muted">{activeSub === 'rowColor' ? '\u25B2' : '\u25BC'}</span>
-                </button>
-                {activeSub === 'rowColor' ? (
-                  <div className="border-t border-border px-3 py-2">
-                    {renderColorPicker(rowColors[ctxMenu.row] || '', (c) => setRowColor(ctxMenu.row, c))}
-                  </div>
-                ) : null}
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Column: Auto-fit */}
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-primary hover:bg-surface"
-                onClick={() => { autoFitColumn(ctxMenu.col); closeCtx() }}
-              >
-                <Ruler size={14} className="text-text-muted" />
-                {siteConfig.labels.contextAutoFit}
-              </button>
-
-              {/* Column: Background color */}
-              <div>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-primary hover:bg-surface"
-                  onClick={() => toggleSub('bg')}
-                >
-                  <PaintBucket size={14} className="text-text-muted" />
-                  <span className="flex-1">{siteConfig.labels.contextColumnBackground}</span>
-                  <span className="text-text-muted">{activeSub === 'bg' ? '\u25B2' : '\u25BC'}</span>
-                </button>
-                {activeSub === 'bg' ? (
-                  <div className="border-t border-border px-3 py-2">
-                    {renderColorPicker(columnColors[ctxMenu.col] || '', (c) => setColumnColor(ctxMenu.col, c))}
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Column: Column type */}
-              <div>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-primary hover:bg-surface"
-                  onClick={() => toggleSub('type')}
-                >
-                  <TextSelect size={14} className="text-text-muted" />
-                  <span className="flex-1">{siteConfig.labels.contextColumnType}</span>
-                  <span className="text-xs text-text-muted">{cells[0]?.[ctxMenu.col]?.format ?? 'text'}</span>
-                </button>
-                {activeSub === 'type' ? (
-                  <div className="border-t border-border px-3 py-2">
-                    {siteConfig.columnFormats.map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        className={`block w-full rounded-sm px-2 py-1 text-left text-xs hover:bg-surface ${cells[0]?.[ctxMenu.col]?.format === opt.value ? 'font-semibold text-primary' : 'text-text-primary'}`}
-                        onClick={() => { setColumnFormat(ctxMenu.col, opt.value as ColumnFormat); closeCtx() }}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Column: Text alignment */}
-              <div>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-primary hover:bg-surface"
-                  onClick={() => toggleSub('align')}
-                >
-                  {alignIcons[columnTextAlign[ctxMenu.col] || 'left']}
-                  <span className="flex-1">{siteConfig.labels.contextTextAlign}</span>
-                  <span className="text-text-muted">{activeSub === 'align' ? '\u25B2' : '\u25BC'}</span>
-                </button>
-                {activeSub === 'align' ? (
-                  <div className="border-t border-border px-3 py-2">
-                    {(siteConfig.labels.textAlignOptions as readonly { value: string; label: string }[]).map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        className={`flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left text-xs hover:bg-surface ${(columnTextAlign[ctxMenu.col] || 'left') === opt.value ? 'font-semibold text-primary' : 'text-text-primary'}`}
-                        onClick={() => { setColumnTextAlign(ctxMenu.col, opt.value as TextAlign); closeCtx() }}
-                      >
-                        {alignIcons[opt.value]}
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </>
-          )}
-        </div>
+        <TableCtxMenu
+          ctxMenu={ctxMenu}
+          activeSub={activeSub}
+          columnColors={columnColors}
+          cellColors={cellColors}
+          rowColors={rowColors}
+          columnTextAlign={columnTextAlign}
+          cellTextAlign={cellTextAlign}
+          cells={cells}
+          onClose={closeCtx}
+          onToggleSub={toggleSub}
+          autoFitColumn={autoFitColumn}
+          setColumnColor={setColumnColor}
+          setCellColor={setCellColor}
+          setRowColor={setRowColor}
+          setColumnFormat={setColumnFormat}
+          setCellTextAlign={setCellTextAlign}
+          setColumnTextAlign={setColumnTextAlign}
+          updateCell={updateCell}
+          insertRowAbove={(index) => insertRowAt(index)}
+          insertRowBelow={(index) => insertRowAt(index + 1)}
+          deleteRowAt={(index) => deleteRowAt(index)}
+          insertColLeft={(col) => insertColAt(col)}
+          insertColRight={(col) => insertColAt(col + 1)}
+          deleteColAt={(col) => deleteColAt(col)}
+          sortAsc={sortAsc}
+          sortDesc={sortDesc}
+        />
       ) : null}
       {pasting ? (
         <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-white/60">

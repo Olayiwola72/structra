@@ -23,6 +23,7 @@ describe('TableCell', () => {
             <TableCell
               cell={baseCell}
               row={0} col={0}
+              freezeRow={false} freezeCol={false}
               headerStyle="none"
               headerColor="#1E40AF"
               headerTextColor="#ffffff"
@@ -50,7 +51,7 @@ describe('TableCell', () => {
         </tbody>
       </table>,
     )
-    expect(screen.getByRole('cell')).toBeInTheDocument()
+    expect(screen.getByRole('gridcell')).toBeInTheDocument()
   })
 
   it('renders as columnheader when headerStyle is first-row', () => {
@@ -61,6 +62,7 @@ describe('TableCell', () => {
             <TableCell
               cell={baseCell}
               row={0} col={0}
+              freezeRow={false} freezeCol={false}
               headerStyle="first-row"
               headerColor="#1E40AF"
               headerTextColor="#ffffff"
@@ -101,6 +103,7 @@ describe('TableCell', () => {
             <TableCell
               cell={baseCell}
               row={2} col={3}
+              freezeRow={false} freezeCol={false}
               headerStyle="none"
               headerColor="#1E40AF"
               headerTextColor="#ffffff"
@@ -128,7 +131,7 @@ describe('TableCell', () => {
         </tbody>
       </table>,
     )
-    await user.click(screen.getByRole('cell'))
+    await user.click(screen.getByRole('gridcell'))
     expect(onSelect).toHaveBeenCalledWith(2, 3, expect.anything())
   })
 })

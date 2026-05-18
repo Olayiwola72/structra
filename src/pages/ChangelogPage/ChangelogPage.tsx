@@ -1,0 +1,39 @@
+import type { ReactNode } from 'react'
+import { CHANGELOG, getChangeStyle } from '../../config/changelog'
+
+export function ChangelogPage(): ReactNode {
+  return (
+    <main className="mx-auto max-w-narrow px-4 py-16">
+      <h1 className="text-3xl font-bold text-text-primary">Changelog</h1>
+      <p className="mt-3 text-base text-text-secondary">
+        Every release of Tablesmit, documented.
+      </p>
+
+      <div className="mt-12 space-y-10">
+        {CHANGELOG.map((entry) => (
+          <article key={entry.version} className="border-b border-border pb-10 last:border-0">
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-lg font-semibold text-text-primary">v{entry.version}</h2>
+              <time className="text-sm text-text-muted">{entry.date}</time>
+            </div>
+            <ul className="mt-4 space-y-2">
+              {entry.changes.map((change, index) => {
+                const style = getChangeStyle(change.type)
+                return (
+                  <li key={index} className="flex items-start gap-3 text-sm">
+                    <span className={`mt-0.5 inline-flex shrink-0 rounded-sm px-2 py-0.5 text-xs font-medium ${style.bg} ${style.text}`}>
+                      {style.label}
+                    </span>
+                    <span className="text-text-secondary">{change.description}</span>
+                  </li>
+                )
+              })}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </main>
+  )
+}
+
+export default ChangelogPage

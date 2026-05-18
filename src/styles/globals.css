@@ -10,9 +10,21 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    box-sizing: border-box;
+  * { box-sizing: border-box; }
+  html, body {
+    @apply h-full;
   }
+  body {
+    @apply bg-white text-text-primary font-sans antialiased;
+  }
+  #root {
+    @apply flex min-h-full flex-col;
+  }
+  /* :focus-visible */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+}
 
   html {
     scroll-behavior: smooth;
@@ -50,5 +62,52 @@
 
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+@media print {
+  nav, header, footer,
+  [data-toolbar], [data-sidebar-left], [data-sidebar-right],
+  [data-print-hide],
+  .floating-action-buttons, .mobile-sheet-overlay {
+    display: none !important;
+  }
+
+  [data-table-container] {
+    overflow: visible !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11pt;
+  }
+
+  td, th {
+    border: 1px solid #E5E7EB !important;
+    padding: 6pt 8pt !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  th, [data-header-row] td {
+    background-color: #F1F5F9 !important;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  [data-table-caption] {
+    font-size: 10pt;
+    font-style: italic;
+    color: #6B7280;
+    margin-bottom: 6pt;
+  }
+
+  @page {
+    margin: 2cm;
+    size: A4 landscape;
   }
 }

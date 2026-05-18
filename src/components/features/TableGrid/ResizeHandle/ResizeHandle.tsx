@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 
-export function ResizeHandle({
+function ResizeHandleRaw({
   axis,
   label,
   onMouseDown,
@@ -12,8 +12,8 @@ export function ResizeHandle({
   onDoubleClick?: () => void
 }): ReactNode {
   const axisClass = axis === 'column'
-    ? 'right-0 top-0 h-full w-1 cursor-col-resize'
-    : 'bottom-0 left-0 w-full h-1 cursor-row-resize'
+    ? 'right-0 top-0 h-full w-3 cursor-col-resize sm:w-2'
+    : 'bottom-0 left-0 w-full h-3 cursor-row-resize sm:h-2'
 
   return (
     <span
@@ -27,3 +27,5 @@ export function ResizeHandle({
     />
   )
 }
+
+export const ResizeHandle = memo(ResizeHandleRaw)
