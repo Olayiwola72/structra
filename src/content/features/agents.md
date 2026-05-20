@@ -2414,7 +2414,7 @@ npx tailwindcss init -p
 
 # 4. shadcn/ui (follow prompts: TypeScript, Tailwind, src/components/ui)
 npx shadcn@latest init
-npx shadcn@latest add button select tooltip dropdown-menu separator badge dialog context-menu
+npx shadcn@latest add button select tooltip dropdown-menu separator badge dialog
 
 # 5. Table resize/drag
 npm install @dnd-kit/core @dnd-kit/utilities
@@ -2426,28 +2426,12 @@ npm install jspdf html2canvas @e965/xlsx
 npm install papaparse
 npm install -D @types/papaparse
 
-# 8. Internationalization
-npm install i18next react-i18next i18next-http-backend i18next-browser-languagedetector
-
-# 9. Blog and content rendering
-npm install react-markdown remark-gfm react-helmet-async sonner
-npm install -D @tailwindcss/typography
-
-# 10. Error monitoring
-npm install @sentry/react
-
-# 11. Testing
+# 8. Testing
 npm install -D vitest @testing-library/react @testing-library/user-event
 npm install -D @testing-library/jest-dom @vitejs/plugin-react jsdom
 
-# 12. E2E testing
-npm install -D @playwright/test
-npx playwright install
-
-# 13. Dev tooling
+# 9. Dev tools
 npm install -D @types/react @types/react-dom esbuild
-npm install -D husky lint-staged
-npx husky init
 ```
 
 ---
@@ -2791,37 +2775,6 @@ Last updated: 2026-05-19 — 404 tests passing (46 test files), coverage thresho
 
 ### Export Quality of Life
 - [x] Export filename uses table caption when present — `caption.trim()` passed through `useExport → exportTable` chain, falls back to `tablesmit-table`
-
-### Internationalization (Section v7.0 — react-i18next)
-- [x] `npm install i18next react-i18next i18next-http-backend i18next-browser-languagedetector`
-- [x] `/src/i18n/i18n.ts` — i18next initialisation with http-backend + language detector
-- [x] `/src/i18n/config.ts` — `LOCALES` array: en, ar, fr, es, pt, ja, de, no
-- [x] `/src/i18n/types.d.ts` — TypeScript augmentation deriving key types from en/common.json
-- [x] `/public/locales/{en,ar,fr,es,pt,ja,de,no}/common.json` — all 8 locale JSON files
-- [x] Custom LocaleContext fully removed — zero references remain in codebase
-- [x] RTL: `document.documentElement.dir = 'rtl'` on Arabic via `i18n.on('languageChanged')`
-- [x] Language picker in Navbar — `<select>` with locale display names in their own language
-- [x] Locale persisted in localStorage key `tablesmit-locale`
-- [x] Brand name `Tablesmit` never translated in any locale
-- [x] All toast messages use `useTranslation` + interpolation variables `{{format}}`, `{{rows}}`, etc.
-- [x] All aria-labels translated across all 8 languages
-- [x] `useSuspense: true` — app suspends on initial locale load, `<Suspense>` at main.tsx root handles it
-
-### Branch Protection (Section 62)
-- [x] Main branch protected — direct push returns 403
-- [x] PR required before merging to main
-- [x] Required status checks: lint + test + build must all pass
-- [x] Force pushes blocked
-- [x] Branch naming convention enforced: feat/ fix/ docs/ chore/ test/ refactor/ content/ i18n/
-- [x] `.github/workflows/ci.yml` — all three jobs (lint, test, build) as required checks
-
-### Content — v8.0 Targets
-- [ ] Blog posts committed to `src/content/blog/` (Section 58 — 5 posts ready)
-- [ ] Feature landing pages system built + 6 JSON files (Section 59)
-- [ ] Real testimonials — min 3 collected and added to TESTIMONIALS array (Section 60)
-- [ ] Google Search Console — verified + sitemap submitted (Section 57B)
-- [ ] Netlify env vars — `VITE_GA4_MEASUREMENT_ID` and `VITE_SENTRY_DSN` set in dashboard (Section 57A)
-- [ ] Sitemap updated with blog post and feature page URLs
 
 ---
 
@@ -7008,361 +6961,90 @@ Seven tests in `src/test/pages/TestimonialsPage/TestimonialsPage.test.tsx`:
 
 ## v7.0 — Internationalization (i18n)
 
-> **Implementation updated:** The initial i18n used a custom `LocaleContext`.
-> This was replaced with **react-i18next + i18next-http-backend** — the industry standard.
-> The custom LocaleContext is fully removed. Do not re-implement it.
+### Overview
 
-### Libraries
+Tablesmit now supports **8 languages**: English, Arabic, German, Spanish,
+French, Japanese, Norwegian Bokmål, and Portuguese. All user-facing strings
+are translated. RTL layout is enabled for Arabic.
 
-```bash
-npm install i18next react-i18next i18next-http-backend i18next-browser-languagedetector
-```
-
-### Supported Languages
-
-| Code | Display name | Direction |
-|------|-------------|-----------|
-| `en` | English     | LTR       |
-| `ar` | Arabic      | RTL       |
-| `fr` | Français    | LTR       |
-| `es` | Español     | LTR       |
-| `pt` | Português   | LTR       |
-| `ja` | Japanese    | LTR       |
-| `de` | Deutsch     | LTR       |
-| `no` | Norsk       | LTR       |
-
-### File Structure
+### Architecture
 
 ```
-/public
-  /locales
-    /en/common.json     ← source of truth (English)
-    /ar/common.json
-    /fr/common.json
-    /es/common.json
-    /pt/common.json
-    /ja/common.json
-    /de/common.json
-    /no/common.json
-
-/src
-  /i18n
-    i18n.ts             ← initialise i18next (see below)
-    config.ts           ← language metadata (name, direction, flag)
-    types.d.ts          ← TypeScript augmentation for type-safe t()
+src/config/locales/
+├── types.ts      ← TranslationShape — every string typed
+├── index.ts      ← LOCALES meta + loadLocale()
+├── en.ts         ← English (source of truth)
+├── ar.ts         ← Arabic (RTL)
+├── de.ts         ← German
+├── es.ts         ← Spanish
+├── fr.ts         ← French
+├── ja.ts         ← Japanese
+├── nb.ts         ← Norwegian Bokmål
+└── pt.ts         ← Portuguese
 ```
 
-### Why This Architecture
+### Key Design Decisions
 
-```
-✅ Lazy loading via http-backend — only the active language JSON is fetched.
-   A user who never changes language never downloads Arabic or Japanese.
-
-✅ Type safety — all translation keys are typed from en/common.json.
-   Mistyped keys are caught at compile time, not at runtime.
-
-✅ i18next is the standard — battle-tested, community-maintained,
-   with dedicated tooling for extraction, validation, and translation management.
-
-✅ No custom context to maintain — useTranslation() from react-i18next
-   replaces useLocale() with zero bespoke code.
-
-✅ Suspense-compatible — the app suspends while the locale JSON loads,
-   then hydrates. Works cleanly with React.lazy() lazy pages.
-```
-
-### `/src/i18n/i18n.ts`
-
-```ts
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import Backend from 'i18next-http-backend';
-import LanguageDetector from 'i18next-browser-languagedetector';
-
-if (!i18n.isInitialized) {
-  i18n
-    .use(Backend)           // lazy-loads JSON from /public/locales/
-    .use(LanguageDetector)  // detects from localStorage then navigator.language
-    .use(initReactI18next)
-    .init({
-      fallbackLng: 'en',
-      supportedLngs: ['en', 'ar', 'fr', 'es', 'pt', 'ja', 'de', 'no'],
-      ns: ['common'],
-      defaultNS: 'common',
-
-      backend: {
-        loadPath: '/locales/{{lng}}/{{ns}}.json',
-      },
-
-      interpolation: {
-        escapeValue: false,   // React already escapes by default
-      },
-
-      react: {
-        useSuspense: true,    // suspend while loading — pairs with Suspense fallback
-      },
-
-      detection: {
-        order: ['localStorage', 'navigator'],
-        caches: ['localStorage'],
-        lookupLocalStorage: 'tablesmit-locale',
-      },
-    });
-}
-
-export default i18n;
-```
-
-### `/src/i18n/config.ts`
-
-```ts
-// Language metadata — used by the language picker UI
-
-export interface LocaleConfig {
-  code:      string;
-  name:      string;   // display name in that language
-  dir:       'ltr' | 'rtl';
-}
-
-export const LOCALES: LocaleConfig[] = [
-  { code: 'en', name: 'English',   dir: 'ltr' },
-  { code: 'ar', name: 'العربية',   dir: 'rtl' },
-  { code: 'fr', name: 'Français',  dir: 'ltr' },
-  { code: 'es', name: 'Español',   dir: 'ltr' },
-  { code: 'pt', name: 'Português', dir: 'ltr' },
-  { code: 'ja', name: '日本語',    dir: 'ltr' },
-  { code: 'de', name: 'Deutsch',   dir: 'ltr' },
-  { code: 'no', name: 'Norsk',     dir: 'ltr' },
-];
-```
-
-### `/src/i18n/types.d.ts` — TypeSafe translations
-
-```ts
-// Augment react-i18next to derive key types from the English source file.
-// Every call to t('some.key') is now checked at compile time.
-
-import 'react-i18next';
-import type en from '../../public/locales/en/common.json';
-
-declare module 'react-i18next' {
-  interface CustomTypeOptions {
-    defaultNS: 'common';
-    resources: {
-      common: typeof en;
-    };
-  }
-}
-```
-
-### `/public/locales/en/common.json` — structure
-
-English is the source of truth. All other locale files must implement the same shape.
-Missing keys fall back to English automatically (`fallbackLng: 'en'`).
-
-```json
-{
-  "nav": {
-    "home":       "Home",
-    "about":      "About",
-    "blog":       "Blog",
-    "contact":    "Contact",
-    "openSource": "Open Source",
-    "changelog":  "Changelog"
-  },
-  "hero": {
-    "headline":    "Tables built for analytical writing.",
-    "subtext":     "A minimalist table builder — with full control over headers, formatting, and export.",
-    "cta":         "Start Building"
-  },
-  "toolbar": {
-    "addRow":      "Add Row",
-    "addColumn":   "Add Column",
-    "removeRow":   "Remove Row",
-    "removeColumn":"Remove Column",
-    "merge":       "Merge",
-    "unmerge":     "Unmerge",
-    "clearAll":    "Clear All",
-    "undo":        "Undo"
-  },
-  "export": {
-    "pdf":         "PDF",
-    "png":         "PNG",
-    "jpeg":        "JPEG",
-    "excel":       "Excel",
-    "csv":         "CSV"
-  },
-  "toast": {
-    "exportSuccess":   "Table exported as {{format}}.",
-    "exportError":     "Export failed. Try reducing the table size.",
-    "importSuccess":   "Table imported. {{rows}} rows, {{cols}} columns.",
-    "importError":     "Could not read file. Check the format and try again.",
-    "importTooLarge":  "File too large. Maximum size is 5MB.",
-    "copyImage":       "Table copied as image.",
-    "copyData":        "Table data copied. Paste into Excel or Google Sheets.",
-    "pasteSuccess":    "Table pasted. {{rows}} rows, {{cols}} columns.",
-    "pasteError":      "Could not read clipboard. Try importing a file instead.",
-    "undoEmpty":       "Nothing left to undo.",
-    "tableCleared":    "Table cleared."
-  },
-  "aria": {
-    "tableEditor":     "Table editor",
-    "resizeColumn":    "Resize column {{index}}. Double-click to auto-fit.",
-    "mergeButton":     "Merge selected cells",
-    "undoButton":      "Undo. {{depth}} actions available.",
-    "undoDisabled":    "Nothing to undo",
-    "themeSelect":     "Select table theme",
-    "languageSelect":  "Select language"
-  },
-  "meta": {
-    "homeTitle":        "Tablesmit — Tables, Your Way",
-    "homeDescription":  "A minimalist table builder for analytical writing. Build clean structured tables with full control over headers, formatting, and export. Free, no signup.",
-    "blogTitle":        "Blog — Tablesmit",
-    "aboutTitle":       "About — Tablesmit",
-    "notFoundTitle":    "Page not found — Tablesmit"
-  },
-  "errors": {
-    "pageNotFound":     "Page not found.",
-    "pageNotFoundSub":  "That URL does not exist. Let us get you back to building.",
-    "backToHome":       "Back to Home",
-    "somethingWrong":   "Something went wrong.",
-    "reload":           "Reload the page"
-  },
-  "brand": {
-    "name":    "Tablesmit",
-    "tagline": "Tables, your way."
-  }
-}
-```
-
-**Key rules for all locale JSON files:**
-- `brand.name` is always `"Tablesmit"` in every language — never translate the brand name
-- Interpolation variables (`{{format}}`, `{{rows}}`) must be preserved exactly — only surrounding text is translated
-- Keys must match en/common.json exactly — no extra keys, no missing keys
-
-### Usage in Components
-
-```tsx
-// Replace any siteConfig.copy / useLocale() calls with useTranslation
-import { useTranslation } from 'react-i18next';
-
-const MyComponent: React.FC = () => {
-  const { t } = useTranslation('common');
-
-  return (
-    <button aria-label={t('aria.mergeButton')}>
-      {t('toolbar.merge')}
-    </button>
-  );
-};
-```
-
-For toast messages with interpolation:
-```ts
-import { useTranslation } from 'react-i18next';
-const { t } = useTranslation('common');
-toast.success(t('toast.exportSuccess', { format: 'PDF' }));
-// → "Table exported as PDF."
-```
-
-### RTL Support (Arabic)
-
-```tsx
-// src/App.tsx — set dir on <html> when language changes
-import i18n from '@/i18n/i18n';
-import { LOCALES } from '@/i18n/config';
-
-i18n.on('languageChanged', (lng) => {
-  const locale = LOCALES.find(l => l.code === lng);
-  document.documentElement.dir = locale?.dir ?? 'ltr';
-  document.documentElement.lang = lng;
-});
-```
-
-### Language Picker (Navbar)
-
-```tsx
-import { useTranslation } from 'react-i18next';
-import { LOCALES } from '@/i18n/config';
-
-const LanguagePicker: React.FC = () => {
-  const { i18n } = useTranslation();
-
-  return (
-    <select
-      value={i18n.language}
-      onChange={e => i18n.changeLanguage(e.target.value)}
-      aria-label={t('aria.languageSelect')}
-      className="text-sm bg-transparent border border-border rounded-sm px-2 py-1"
-    >
-      {LOCALES.map(locale => (
-        <option key={locale.code} value={locale.code}>
-          {locale.name}
-        </option>
-      ))}
-    </select>
-  );
-};
-```
-
-### Adding a New Language
-
-```
-1. Create /public/locales/{code}/common.json
-   Copy from en/common.json — translate every value, preserve all keys and
-   interpolation variables exactly.
-
-2. Add the language code to supportedLngs in src/i18n/i18n.ts
-
-3. Add a LocaleConfig entry to LOCALES in src/i18n/config.ts
-
-4. The language picker renders it automatically on next build.
-   No component changes required.
-```
+- **No external library** — custom `LocaleContext` + `useLocale` hook
+- **Locale persisted** in `localStorage` key `tablesmit-locale`
+- **Auto-detection** via `navigator.language` on first visit, falls back to `en`
+- **Brand name** (`Tablesmit`) never translated — kept as-is in all locales
+- **Placeholders** `{brand}` and `{year}` resolved at render time via `.replace()`
+- **RTL** handled via `<html dir="rtl">` on Arabic, LTR for all others
+- **ErrorBoundary** is a class component — uses `fallbackStrings` prop with a
+  `LocalizedErrorBoundary` wrapper in App.tsx
+- **`siteConfig.copy`/`labels`/`messages` removed** — locale files are the sole source
 
 ### What Is Translated
 
 ```
-Pages:     Home, About, Open Source, Contact, 404, Testimonials, Blog list + posts
-UI:        Navbar, Footer, all sidebar panels, toolbar buttons and tooltips
-Table:     Context menu, column type labels, theme names, preset labels
-Messages:  All toast messages, error states, empty states, aria-labels
-Meta:      Page titles and meta descriptions per language
+Pages:         Home (LandingPage), About, OpenSource, Contact, 404, Testimonials, Blog
+UI:            Navbar, Footer, sidebar panels (Dimensions, Colors, Themes, Templates,
+               HeaderOptions, ColumnType, FindReplace, MergeCells, Export, Border)
+Toolbar:       Buttons, tooltips, dropdowns, context menus
+Messages:      Toasts, errors, announcements, empty states, aria-labels
+Metadata:      Page titles, meta descriptions, nav link labels
 ```
 
-### What Is Never Translated
+### Adding a New Language
+
+1. Create a new file `src/config/locales/xx.ts` implementing `TranslationShape`
+2. Add an entry to the `LOCALES` array in `index.ts`
+3. The language appears automatically in the navbar switcher
+
+### Files Modified
 
 ```
-- Brand name: "Tablesmit" — always the same in every language
-- Export format names: "PDF", "PNG", "JPEG", "Excel", "CSV"
-- Code, technical identifiers, URLs
-- Blog post content (posts are authored in English only — translation optional in future)
+Modified:  src/config/locales/types.ts, index.ts, en.ts, ar.ts, de.ts, es.ts,
+           fr.ts, ja.ts, nb.ts, pt.ts
+           src/context/LocaleContext.tsx
+           ~30 component/page files (all consumers of siteConfig.copy/labels/messages)
+           src/config/siteConfig.ts (removed copy, labels, messages)
+           src/components/ui/ErrorBoundary/ErrorBoundary.tsx
+           src/App.tsx (LocalizedErrorBoundary wrapper)
+Added:     (none — all changes in-place)
 ```
-
-### Main.tsx Setup
-
-```tsx
-// src/main.tsx — import i18n before App to ensure initialisation
-import './i18n/i18n';
-import { Suspense } from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App';
-import { PageLoader } from '@/components/ui/PageLoader';
-
-createRoot(document.getElementById('root')!).render(
-  <Suspense fallback={<PageLoader />}>
-    <App />
-  </Suspense>
-);
-```
-
-The `Suspense` at root level handles the initial translation load.
-The `useSuspense: true` config suspends rendering until the active locale JSON is fetched.
 
 ---
 
 ### v7.0 — Completed (do not re-implement)
 
+i18n shipped in v7.0. All items below are locked.
+
+```
+[x] 8-language support: English, Arabic, German, Spanish, French, Japanese, Norwegian, Portuguese
+[x] RTL layout for Arabic via <html dir="rtl">
+[x] Custom LocaleContext + useLocale hook — no external library
+[x] Locale persisted in localStorage key "tablesmit-locale"
+[x] Auto-detection via navigator.language on first visit
+[x] Brand name (Tablesmit) never translated — kept as-is in all locales
+[x] ~30 component/page files migrated to locale strings
+[x] siteConfig.copy/labels/messages removed — locale files are sole source
+[x] LocalizedErrorBoundary wrapper in App.tsx
+[x] New language = create one locale file + one LOCALES array entry
+```
+
+Also completed alongside v7.0:
 ```
 [x] GitHub repo hygiene — description, website, topics set manually (Section 54)
 [x] Logo 2 (T-form) activated — Logo 1 retired
@@ -7371,6 +7053,8 @@ The `useSuspense: true` config suspends rendering until the active locale JSON i
 [x] Export strategy pattern — PDF/PNG/JPEG/Excel/CSV via strategy classes in export/ directory
 [x] Lighthouse 90+ passing on all four metrics
 [x] npm audit — zero high/critical vulnerabilities
+[x] Testimonials page — /testimonials, config-driven, empty state + card grid (Section 57)
+[x] Testimonials route added to siteConfig and footer
 ```
 
 ---
@@ -7564,7 +7248,7 @@ Dashed border box: border-2 border-dashed border-border rounded-md p-10
             "We are collecting feedback from early users.
              If you have used Tablesmit, we would love to hear from you."
   CTA:      [Share your experience →] → /contact
-  Secondary: "or reach out on X @OlayiwolaAkinn1 / hello@tablesmit.com"
+  Secondary: "or mention us on X @OlayiwolaAkinn1"
 ```
 
 ### Target: 3 testimonials before v8.0 ships
@@ -7572,188 +7256,6 @@ Dashed border box: border-2 border-dashed border-border rounded-md p-10
 The page should not go live in marketing materials while it is empty.
 Collect at least 3 real testimonials before including `/testimonials` in
 any Product Hunt or Hacker News launch materials.
-
----
-
-## 62. Branch Protection Rules
-
-No direct pushes to `main`. Every change — from a typo fix to a new feature —
-goes through a pull request. This is enforced at the GitHub repository level,
-not just by convention.
-
-### GitHub Settings (set once, enforced automatically)
-
-Go to: **GitHub → Repository → Settings → Branches → Add branch protection rule**
-
-```
-Branch name pattern: main
-
-Rules to enable:
-  [x] Require a pull request before merging
-        → Required approvals: 0 (solo project — PR is still required, just no reviewer)
-        → Dismiss stale PR reviews when new commits are pushed
-
-  [x] Require status checks to pass before merging
-        → Required checks:
-            lint     (GitHub Actions job name)
-            test     (GitHub Actions job name)
-            build    (GitHub Actions job name)
-        → Require branches to be up to date before merging
-
-  [x] Do not allow bypassing the above settings
-  [x] Do not allow force pushes
-  [x] Do not allow deletions
-```
-
-With this in place:
-- `git push origin main` fails with a 403 — protected branch
-- The CI pipeline (lint + tests + build) must pass before the merge button activates
-- Force-pushing history rewrites is blocked
-
----
-
-### Branch Naming Convention
-
-```
-feat/short-description        new feature
-fix/short-description         bug fix
-docs/short-description        documentation only
-chore/short-description       config, deps, tooling
-test/short-description        test-only changes
-refactor/short-description    code reorganisation, no behaviour change
-content/short-description     blog posts, feature pages, locale strings
-i18n/short-description        translation additions or corrections
-```
-
-**Rules:**
-- Kebab-case only — no spaces, no uppercase
-- Description must be meaningful — `fix/crash` is not acceptable, `fix/table-clear-undo` is
-- Maximum 40 characters total including the prefix
-- Delete branch after merging — keep the remote clean
-
----
-
-### Workflow (every change)
-
-```bash
-# 1. Make sure you are on main and up to date
-git checkout main
-git pull origin main
-
-# 2. Create your branch
-git checkout -b feat/your-feature-name
-
-# 3. Make changes, commit as you go
-git add .
-git commit -m "feat: describe what you did"
-
-# 4. Push the branch
-git push origin feat/your-feature-name
-
-# 5. Open a PR on GitHub
-#    - Title: short description
-#    - Body: use the PR template (.github/pull_request_template.md)
-#    - Wait for CI to pass (lint + tests + build)
-
-# 6. Merge via GitHub UI (squash or merge commit — your choice)
-
-# 7. Delete the branch after merge
-git branch -d feat/your-feature-name
-git push origin --delete feat/your-feature-name
-
-# 8. Pull main again
-git checkout main
-git pull origin main
-```
-
----
-
-### Commit Message Format
-
-Follow the Conventional Commits standard. The CI pipeline lints commit messages.
-
-```
-feat:     add find and replace
-fix:      correct auto-sum with negative numbers
-docs:     update README blog post section
-chore:    bump vite to 5.4.1
-test:     add useMergeCells edge cases
-refactor: extract borderUtils from TableGrid
-content:  add blog post — how to merge cells
-i18n:     add missing toolbar keys to Arabic locale
-```
-
-**Rules:**
-- Lowercase type prefix followed by colon and space
-- Imperative mood: "add" not "adds" or "added"
-- Max 72 characters on the first line
-- No period at the end
-- Breaking changes: add `BREAKING CHANGE:` in the commit body
-
----
-
-### Why No Direct Pushes to Main
-
-```
-1. CI is the quality gate. Without branch protection, a push that breaks
-   tests or fails lint goes directly to production via Netlify.
-
-2. Every change has a reviewable unit. PRs create a permanent record
-   of what changed, why, and when — essential for an open source project.
-
-3. Collaboration safety. If contributors join, they cannot accidentally
-   push to main. The PR flow is the same for everyone.
-
-4. Rollback is clean. If a merged PR causes a regression, reverting
-   a single squash commit on main is straightforward.
-```
-
----
-
-### `.github/workflows/ci.yml` — Verify These Steps Exist
-
-The CI pipeline must run all three gates before any PR can be merged:
-
-```yaml
-name: CI
-
-on:
-  push:
-    branches-ignore: [main]   # branches only — main merges come from PRs
-  pull_request:
-    branches: [main]
-
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: 'npm' }
-      - run: npm ci
-      - run: npm run lint          # must exit 0 — zero warnings
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: 'npm' }
-      - run: npm ci
-      - run: npm test -- --run    # all tests must pass
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: 'npm' }
-      - run: npm ci
-      - run: npm run build         # must complete without errors
-```
-
-All three jobs (`lint`, `test`, `build`) must appear as required status checks
-in the branch protection settings above.
 
 ---
 

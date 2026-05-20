@@ -11,6 +11,7 @@ const { brand, routes } = siteConfig
 const productLinks = [
   { label: 'Home', href: routes.home },
   { label: 'Blog', href: routes.blog },
+  { label: 'Features', href: routes.features },
   { label: 'Changelog', href: routes.changelog },
   { label: 'Open Source', href: routes.openSource },
 ]

@@ -3,35 +3,76 @@ import type { BlogPost } from '../../types/blog.types'
 const post: BlogPost = {
   slug: 'copy-excel-table-to-web',
   title: 'How to Copy a Table from Excel to the Web',
-  date: '2025-09-20',
-  description: 'Copying tables from Excel to web tools often breaks formatting. Here is how Tablesmit\'s smart clipboard paste keeps everything intact.',
+  date: '2025-10-15',
+  description:
+    'Copying a table from Excel to a web tool usually means rebuilding it from scratch. Tablesmit reads your clipboard and generates the table automatically.',
   author: 'Olayiwola Akinnagbe',
-  tags: ['excel', 'clipboard', 'tutorial'],
-  readTime: 3,
+  tags: ['excel', 'import', 'tutorial'],
+  readTime: 4,
   featured: false,
-  content: `## The Problem
+  content: `## The problem with Excel and the web
 
-You have a carefully formatted table in Excel. You copy it, paste it into a web tool, and the formatting is gone. Columns misalign. Numbers lose their format. Headers disappear.
+You have a table in Excel. You need it on the web — in a document, a blog post, a report, or a tool.
 
-## How Tablesmit Handles It
+The obvious thing is to copy and paste. But it never works cleanly.
 
-Tablesmit reads the HTML table data directly from your clipboard. When you paste, it detects the table structure, parses the rows and columns, and populates the grid exactly as it appeared in Excel.
+Paste into a Google Doc and you get a barely formatted table that needs manual cleanup. Paste into a text editor and you get tab-separated gibberish. Screenshot the Excel range and you lose the ability to edit, search, or re-export. Manually rebuild the table row by row in a web tool — that is the option most people end up taking, and it takes far too long.
 
-### Paste behavior
+There is a better way.
 
-- If the table is empty, Tablesmit creates a new grid matching the dimensions of your clipboard data.
-- If the table already has content, the pasted data fills in starting from the selected cell, expanding the grid if necessary.
+## How Excel copies to the clipboard
 
-## Step-by-step
+When you copy a range of cells in Excel, the clipboard holds two things simultaneously:
 
-1. Select your table in Excel and copy it (Ctrl+C).
-2. Open Tablesmit at [/app](/app).
-3. Click into any cell and paste (Ctrl+V).
-4. Your table appears — rows, columns, and data intact.
+1. A formatted HTML version (for rich paste targets)
+2. A tab-separated plain text version (for everything else)
 
-## Try it
+Most web tools ignore the HTML entirely and paste only the plain text — which is why you see columns separated by tabs instead of a structured table. Tablesmit reads that tab-separated data and reconstructs the full table automatically.
 
-Open [Tablesmit](/app) and paste an Excel table right now. No upload. No file selection. Just copy and paste.`,
+## The Tablesmit paste workflow
+
+1. **Select your range in Excel.** Include the header row if you have one.
+2. **Copy.** Ctrl+C (Windows) or Cmd+C (Mac).
+3. **Open [Tablesmit](/).**
+4. **Paste.** Ctrl+V anywhere on the page.
+
+Tablesmit detects the tab-separated content, calculates the number of rows and columns, and generates the table. Your data appears exactly as it was in Excel — headers in the first row, all values in the correct cells.
+
+From there you can:
+- Resize columns by dragging the column borders
+- Set column types (Number, Currency, Date) for proper formatting
+- Apply a theme for clean visual presentation
+- Merge cells for grouped headers
+- Export as PDF, Excel, PNG, or CSV
+
+## What about Google Sheets?
+
+The same workflow works with Google Sheets. Copy a range, open Tablesmit, paste. Sheets also writes tab-separated data to the clipboard when you copy a range.
+
+## What about Word tables?
+
+Word copies table data as HTML to the clipboard. Tablesmit detects HTML tables and parses them directly — column structure and cell values are preserved. Formatting (bold, colours) is stripped, which is usually what you want when moving data from a formatted document to a clean table builder.
+
+## When the paste does not produce a table
+
+If you paste and the content appears in a single cell rather than a full table, it usually means:
+- You copied a single cell rather than a range — select multiple cells before copying
+- The source used comma separation instead of tabs — use File → Import CSV instead
+- The content is a chart or image, not tabular data — these cannot be parsed automatically
+
+For comma-separated content, use the **Import → Import from CSV** option in the toolbar and paste or upload the data directly.
+
+## Summary
+
+| Source          | How to get it into Tablesmit   |
+|-----------------|-------------------------------|
+| Excel range     | Copy → Paste (Ctrl+V)         |
+| Google Sheets   | Copy → Paste (Ctrl+V)         |
+| Word table      | Copy → Paste (Ctrl+V)         |
+| CSV file        | Toolbar → Import → CSV        |
+| Excel file      | Toolbar → Import → Excel      |
+
+Stop rebuilding tables manually. [Open Tablesmit](/) and paste your Excel data directly.`,
 }
 
 export default post

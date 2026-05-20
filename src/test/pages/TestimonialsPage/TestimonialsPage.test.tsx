@@ -40,9 +40,20 @@ describe('TestimonialsPage', () => {
         <TestimonialsPage />
       </MemoryRouter>,
     )
-    const link = screen.getByRole('link', { name: /send us your feedback/i })
+    const link = screen.getByRole('link', { name: /share your experience/i })
     expect(link).toBeInTheDocument()
     expect(link).toHaveAttribute('href', '/contact')
+  })
+
+  it('shows email reach-out in empty state', () => {
+    render(
+      <MemoryRouter>
+        <TestimonialsPage />
+      </MemoryRouter>,
+    )
+    const emailLink = screen.getByRole('link', { name: /hello@tablesmit/i })
+    expect(emailLink).toBeInTheDocument()
+    expect(emailLink).toHaveAttribute('href', 'mailto:hello@tablesmit.com')
   })
 
   it('renders testimonial cards when data exists', async () => {

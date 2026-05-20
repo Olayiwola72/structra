@@ -41,6 +41,8 @@ export const siteConfig = {
     about: '/about',
     blog: '/blog',
     blogPost: '/blog/:slug',
+    features: '/features',
+    featureDetail: '/features/:slug',
     contact: '/contact',
     openSource: '/open-source',
     privacy: '/privacy',
@@ -74,6 +76,7 @@ export const siteConfig = {
   nav: [
     { label: 'Home', route: 'home' },
     { label: 'About', route: 'about' },
+    { label: 'Features', route: 'features' },
     { label: 'Blog', route: 'blog' },
     { label: 'Contact', route: 'contact' },
     { label: 'Open Source', route: 'openSource' },

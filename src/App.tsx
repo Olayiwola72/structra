@@ -14,6 +14,8 @@ const LandingPage = lazy(() => import('./pages/LandingPage/LandingPage'))
 const TableMakerPage = lazy(() => import('./pages/TableMakerPage/TableMakerPage'))
 const BlogListPage = lazy(() => import('./pages/BlogListPage/BlogListPage'))
 const BlogPostPage = lazy(() => import('./pages/BlogPostPage/BlogPostPage'))
+const FeaturesListPage = lazy(() => import('./pages/FeaturesListPage/FeaturesListPage'))
+const FeatureDetailPage = lazy(() => import('./pages/FeatureDetailPage/FeatureDetailPage'))
 const ContactPage = lazy(() => import('./pages/ContactPage/ContactPage'))
 const OpenSourcePage = lazy(() => import('./pages/OpenSourcePage/OpenSourcePage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage/PrivacyPage'))
@@ -45,6 +47,8 @@ export default function App(): ReactNode {
                   <Route path={siteConfig.routes.about} element={<LandingPage />} />
                   <Route path={siteConfig.routes.blog} element={<BlogListPage />} />
                   <Route path={siteConfig.routes.blogPost} element={<BlogPostPage />} />
+                  <Route path={siteConfig.routes.features} element={<FeaturesListPage />} />
+                  <Route path={siteConfig.routes.featureDetail} element={<FeatureDetailPage />} />
                   <Route path={siteConfig.routes.openSource} element={<OpenSourcePage />} />
                   <Route path={siteConfig.routes.contact} element={<ContactPage />} />
                   <Route path={siteConfig.routes.privacy} element={<PrivacyPage />} />
